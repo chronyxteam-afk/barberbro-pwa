@@ -33,6 +33,14 @@ function App() {
     checkAuth()
   }, [])
 
+  // Forza reload config se manca google_client_id (config cache obsoleta)
+  useEffect(() => {
+    if (config && !config.google_client_id) {
+      console.warn('⚠️ google_client_id mancante, ricarico config...')
+      loadConfig()
+    }
+  }, [config])
+
   // Applica colori dinamici da config
   useEffect(() => {
     if (config) {

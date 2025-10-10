@@ -17,19 +17,28 @@ export default function WelcomeScreen() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        await Promise.all([
-          loadServices(),
-          loadOperators(),
-          loadSlots()
-        ])
+        console.log('🔄 Inizio caricamento dati...')
+        
+        if (loadServices) {
+          await loadServices()
+        }
+        if (loadOperators) {
+          await loadOperators()
+        }
+        if (loadSlots) {
+          await loadSlots()
+        }
+        
         console.log('✅ Dati caricati dall\'API')
       } catch (error) {
         console.error('❌ Errore caricamento dati:', error)
+        // Non bloccare l'interfaccia anche se caricamento fallisce
       }
     }
     
+    // Carica dati solo se non sono già presenti
     loadData()
-  }, [loadServices, loadOperators, loadSlots])
+  }, []) // Rimuovo le dipendenze per evitare loop infiniti
 
   const handleTimePreference = (timeSlot) => {
     setPreferences({ timeSlot })
