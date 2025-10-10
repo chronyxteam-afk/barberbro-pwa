@@ -346,7 +346,13 @@ export const useStore = create(
     {
       name: 'barberbro-storage',
       partialize: (state) => ({
+        auth: state.auth,
+        config: state.config,
         customer: state.customer,
+        isReturningCustomer: state.isReturningCustomer,
+        services: state.services,
+        operators: state.operators,
+        slots: state.slots,
         preferences: state.preferences
       })
     }
