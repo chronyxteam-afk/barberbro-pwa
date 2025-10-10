@@ -1,6 +1,6 @@
 import requests
 
-API = "https://script.google.com/macros/s/AKfycbwjoGsi3f1tBdKXA1eOEgxjTnXwkSSwBfUQWL5shAHJgTKtOawD2eElK31volNJtSPeQw/exec"
+API = "https://script.google.com/macros/s/AKfycbz7rsOTUYpa83iPvyv_67HeBj7gtI2eXMc33wdvan-jpDP66-lsqGRQWpLa_cSMz46P/exec"
 
 # Login
 print("1. Login...")
