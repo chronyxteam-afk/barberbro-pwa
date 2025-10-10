@@ -33,7 +33,10 @@ let CONFIG_PWA_CACHE = null;
 let CLIENTI_CACHE = null;
 
 function getFoglio() {
-  return SpreadsheetApp.getActiveSpreadsheet();
+  // Apre il foglio specifico per ID invece di usare getActiveSpreadsheet()
+  // Questo garantisce che il deployment acceda sempre al foglio corretto
+  const SPREADSHEET_ID = '1O-3CmzjiS0eY8l-ITfNKMtaiN1RZn9xB4wlZFpvFaFw';
+  return SpreadsheetApp.openById(SPREADSHEET_ID);
 }
 
 /**
@@ -244,18 +247,22 @@ function loadClientiCache() {
   const data = sheet.getDataRange().getValues();
   CLIENTI_CACHE = {};
   
-  // Struttura: cn_ID | cn_name | cn_phone | cn_email | cn_enablePWA | cn_lastLogin | cn_totalBookings
+  // Struttura foglio Clienti:
+  // A=cn_ID, B=cn_fullname, C=cn_sex, D=cn_phone, E=cn_email, F=cn_address, G=cn_birthday, ...L=cn_enablePWA
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (row[0]) {
       CLIENTI_CACHE[row[0]] = {
-        cn_ID: row[0],
-        cn_name: row[1] || '',
-        cn_phone: row[2] || '',
-        cn_email: row[3] || '',
-        cn_enablePWA: row[4] === 'SI' || row[4] === true, // Colonna E
-        cn_lastLogin: row[5] || null, // Colonna F
-        cn_totalBookings: parseInt(row[6]) || 0 // Colonna G
+        cn_ID: row[0],           // Colonna A
+        cn_name: row[1] || '',   // Colonna B (cn_fullname)
+        cn_sex: row[2] || '',    // Colonna C
+        cn_phone: row[3] || '',  // Colonna D
+        cn_email: row[4] || '',  // Colonna E ← CORRETTO!
+        cn_address: row[5] || '', // Colonna F
+        cn_birthday: row[6] || '', // Colonna G
+        cn_enablePWA: row[11] === 'SI' || row[11] === true, // Colonna L
+        cn_lastLogin: row[12] || null, // Colonna M
+        cn_totalBookings: parseInt(row[13]) || 0 // Colonna N
       };
     }
   }
