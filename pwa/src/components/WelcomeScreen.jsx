@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useStore } from '../store/useStore'
 
 export default function WelcomeScreen() {
@@ -6,8 +7,29 @@ export default function WelcomeScreen() {
     customer, 
     isReturningCustomer,
     setPreferences,
-    setStep 
+    setStep,
+    loadServices,
+    loadOperators,
+    loadSlots
   } = useStore()
+
+  // Carica i dati reali dal Google Sheets dopo il login
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          loadServices(),
+          loadOperators(),
+          loadSlots()
+        ])
+        console.log('✅ Dati caricati dall\'API')
+      } catch (error) {
+        console.error('❌ Errore caricamento dati:', error)
+      }
+    }
+    
+    loadData()
+  }, [loadServices, loadOperators, loadSlots])
 
   const handleTimePreference = (timeSlot) => {
     setPreferences({ timeSlot })
