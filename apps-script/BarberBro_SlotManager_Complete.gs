@@ -244,28 +244,18 @@ function loadClientiCache() {
   const data = sheet.getDataRange().getValues();
   CLIENTI_CACHE = {};
   
-  // Leggi header per trovare indici colonne (dinamico, non dipende da ordine fisso)
-  const header = data[0];
-  const idxID = header.indexOf('cn_ID');
-  const idxName = Math.max(header.indexOf('cn_fullname'), header.indexOf('cn_name'));
-  const idxPhone = header.indexOf('cn_phone');
-  const idxEmail = header.indexOf('cn_email');
-  const idxEnablePWA = header.indexOf('cn_enablePWA');
-  const idxLastLogin = header.indexOf('cn_lastLogin');
-  const idxTotalBookings = header.indexOf('cn_totalBookings');
-  
-  // Carica clienti
+  // Struttura: cn_ID | cn_name | cn_phone | cn_email | cn_enablePWA | cn_lastLogin | cn_totalBookings
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
-    if (row[idxID]) {
-      CLIENTI_CACHE[row[idxID]] = {
-        cn_ID: row[idxID],
-        cn_name: (idxName >= 0 ? row[idxName] : '') || '',
-        cn_phone: (idxPhone >= 0 ? row[idxPhone] : '') || '',
-        cn_email: (idxEmail >= 0 ? row[idxEmail] : '') || '',
-        cn_enablePWA: idxEnablePWA >= 0 ? (row[idxEnablePWA] === 'SI' || row[idxEnablePWA] === true) : false,
-        cn_lastLogin: (idxLastLogin >= 0 ? row[idxLastLogin] : null) || null,
-        cn_totalBookings: idxTotalBookings >= 0 ? (parseInt(row[idxTotalBookings]) || 0) : 0
+    if (row[0]) {
+      CLIENTI_CACHE[row[0]] = {
+        cn_ID: row[0],
+        cn_name: row[1] || '',
+        cn_phone: row[2] || '',
+        cn_email: row[3] || '',
+        cn_enablePWA: row[4] === 'SI' || row[4] === true, // Colonna E
+        cn_lastLogin: row[5] || null, // Colonna F
+        cn_totalBookings: parseInt(row[6]) || 0 // Colonna G
       };
     }
   }
@@ -298,24 +288,16 @@ function salvaCliente(nome, telefono, email = '', enablePWA = false) {
   
   const data = sheet.getDataRange().getValues();
   
-  // Trova indici colonne dall'header
-  const header = data[0];
-  const idxID = header.indexOf('cn_ID');
-  const idxName = Math.max(header.indexOf('cn_fullname'), header.indexOf('cn_name'));
-  const idxPhone = header.indexOf('cn_phone');
-  const idxEmail = header.indexOf('cn_email');
-  const idxEnablePWA = header.indexOf('cn_enablePWA');
-  
   // Cerca cliente esistente per telefono
   for (let i = 1; i < data.length; i++) {
-    if (data[i][idxPhone] === telefono) {
+    if (data[i][2] === telefono) {
       // Cliente già esistente, aggiorna
-      const cnId = data[i][idxID];
-      if (idxName >= 0) sheet.getRange(i + 1, idxName + 1).setValue(nome);
-      if (idxEmail >= 0) sheet.getRange(i + 1, idxEmail + 1).setValue(email);
+      const cnId = data[i][0];
+      sheet.getRange(i + 1, 2).setValue(nome);
+      sheet.getRange(i + 1, 4).setValue(email);
       // Non sovrascrivere cn_enablePWA se non specificato
-      if (enablePWA !== false && idxEnablePWA >= 0) {
-        sheet.getRange(i + 1, idxEnablePWA + 1).setValue(enablePWA ? 'SI' : 'NO');
+      if (enablePWA !== false) {
+        sheet.getRange(i + 1, 5).setValue(enablePWA ? 'SI' : 'NO');
       }
       CLIENTI_CACHE = null; // Invalida cache
       return cnId;
@@ -381,26 +363,15 @@ function aggiornaLastLogin(clienteId) {
   
   const data = sheet.getDataRange().getValues();
   
-  // Trova indici colonne dall'header
-  const header = data[0];
-  const idxID = header.indexOf('cn_ID');
-  const idxLastLogin = header.indexOf('cn_lastLogin');
-  const idxTotalBookings = header.indexOf('cn_totalBookings');
-  
   for (let i = 1; i < data.length; i++) {
-    if (data[i][idxID] === clienteId) {
+    if (data[i][0] === clienteId) {
       const now = new Date();
       const formatted = Utilities.formatDate(now, Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm:ss');
-      
-      if (idxLastLogin >= 0) {
-        sheet.getRange(i + 1, idxLastLogin + 1).setValue(formatted);
-      }
+      sheet.getRange(i + 1, 6).setValue(formatted); // Colonna F (cn_lastLogin)
       
       // Incrementa contatore prenotazioni
-      if (idxTotalBookings >= 0) {
-        const currentCount = parseInt(data[i][idxTotalBookings]) || 0;
-        sheet.getRange(i + 1, idxTotalBookings + 1).setValue(currentCount + 1);
-      }
+      const currentCount = parseInt(data[i][6]) || 0;
+      sheet.getRange(i + 1, 7).setValue(currentCount + 1); // Colonna G (cn_totalBookings)
       
       CLIENTI_CACHE = null;
       return;
@@ -1309,20 +1280,10 @@ function toggleTuttiClientiPWA(enable) {
   const data = sheet.getDataRange().getValues();
   let count = 0;
   
-  // Trova indici colonne dall'header
-  const header = data[0];
-  const idxEmail = header.indexOf('cn_email');
-  const idxEnablePWA = header.indexOf('cn_enablePWA');
-  
-  if (idxEnablePWA < 0) {
-    Logger.log('⚠️ Colonna cn_enablePWA non trovata!');
-    return 0;
-  }
-  
   for (let i = 1; i < data.length; i++) {
-    const email = idxEmail >= 0 ? data[i][idxEmail] : null;
+    const email = data[i][3];
     if (email) { // Solo clienti con email
-      sheet.getRange(i + 1, idxEnablePWA + 1).setValue(enable ? 'SI' : 'NO');
+      sheet.getRange(i + 1, 5).setValue(enable ? 'SI' : 'NO'); // Colonna E (cn_enablePWA)
       count++;
     }
   }
@@ -1693,13 +1654,24 @@ function verificaToken(authHeader) {
     throw new Error('UNAUTHORIZED:Token mancante');
   }
   
-  // Estrai token da "Bearer TOKEN"
-  const parts = authHeader.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    throw new Error('UNAUTHORIZED:Formato token invalido');
+  // Estrai token da "Bearer TOKEN" o token diretto
+  let token = authHeader;
+  
+  // Se ha formato "Bearer TOKEN", estrai solo il token
+  if (authHeader.includes(' ')) {
+    const parts = authHeader.split(' ');
+    if (parts.length === 2 && parts[0] === 'Bearer') {
+      token = parts[1];
+    } else {
+      throw new Error('UNAUTHORIZED:Formato token invalido');
+    }
   }
   
-  const token = parts[1];
+  // Verifica che il token non sia vuoto
+  if (!token || token.trim() === '') {
+    throw new Error('UNAUTHORIZED:Token vuoto');
+  }
+  
   const cache = CacheService.getScriptCache();
   const tokenDataStr = cache.get('token_' + token);
   
@@ -1784,6 +1756,7 @@ function apiLogin(email) {
  * Endpoint GET per Web App - API REST completa per PWA
  */
 function doGet(e) {
+  // Supporta sia 'endpoint' (PWA) che 'action' (AppSheet legacy)
   const action = e.parameter.endpoint || e.parameter.action;
   
   // CORS Headers per accesso pubblico
@@ -1891,20 +1864,14 @@ function doGet(e) {
         };
     }
     
-    // Aggiungi CORS headers alla risposta
-    const responseOutput = output.setContent(JSON.stringify(result));
-    
-    // IMPORTANTE: Questi header permettono le chiamate da localhost e altri domini
-    // Non funzionano direttamente con ContentService, quindi usiamo HtmlService come workaround
-    return ContentService.createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
+    return output.setContent(JSON.stringify(result));
     
   } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({
+    return output.setContent(JSON.stringify({
       success: false,
       error: error.message,
       stack: error.stack
-    })).setMimeType(ContentService.MimeType.JSON);
+    }));
   }
 }
 

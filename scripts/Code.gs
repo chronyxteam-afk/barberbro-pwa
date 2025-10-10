@@ -1654,13 +1654,24 @@ function verificaToken(authHeader) {
     throw new Error('UNAUTHORIZED:Token mancante');
   }
   
-  // Estrai token da "Bearer TOKEN"
-  const parts = authHeader.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    throw new Error('UNAUTHORIZED:Formato token invalido');
+  // Estrai token da "Bearer TOKEN" o token diretto
+  let token = authHeader;
+  
+  // Se ha formato "Bearer TOKEN", estrai solo il token
+  if (authHeader.includes(' ')) {
+    const parts = authHeader.split(' ');
+    if (parts.length === 2 && parts[0] === 'Bearer') {
+      token = parts[1];
+    } else {
+      throw new Error('UNAUTHORIZED:Formato token invalido');
+    }
   }
   
-  const token = parts[1];
+  // Verifica che il token non sia vuoto
+  if (!token || token.trim() === '') {
+    throw new Error('UNAUTHORIZED:Token vuoto');
+  }
+  
   const cache = CacheService.getScriptCache();
   const tokenDataStr = cache.get('token_' + token);
   
