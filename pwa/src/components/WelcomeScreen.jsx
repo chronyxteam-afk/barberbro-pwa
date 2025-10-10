@@ -10,7 +10,9 @@ export default function WelcomeScreen() {
     setStep,
     loadServices,
     loadOperators,
-    loadSlots
+    loadSlots,
+    logout,
+    auth
   } = useStore()
 
   // Carica i dati reali dal Google Sheets dopo il login
@@ -47,6 +49,19 @@ export default function WelcomeScreen() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-[#f5f5f7]">
+      {/* Logout Button - Top Right */}
+      <div className="absolute top-4 right-4">
+        <button
+          onClick={logout}
+          className="flex items-center gap-2 px-4 py-2 text-sm text-[#86868b] hover:text-[#1d1d1f] transition-colors"
+        >
+          <span>{auth?.user?.email || 'Account'}</span>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+        </button>
+      </div>
+
       {/* Hero Section - Apple Style */}
       <div className="max-w-2xl mx-auto px-6 pt-16 pb-12 text-center animate-fadeIn">
         {/* Logo/Icon */}

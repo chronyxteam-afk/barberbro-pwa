@@ -118,14 +118,22 @@ export const useStore = create(
       checkAuth: async () => {
         const currentAuth = get().auth
         
-        if (!currentAuth?.token || !currentAuth?.user) {
+        if (!currentAuth?.token || !currentAuth?.user?.email) {
           // Nessun auth salvato
+          console.log('❌ Auth non presente, login necessario')
           set({ auth: { isAuthenticated: false, token: null, user: null } })
           return false
         }
         
         // Token presente nello state persistito
         console.log('✅ Auth recuperato da cache:', currentAuth.user?.email)
+        
+        // Verifica che il token non sia una stringa vuota
+        if (typeof currentAuth.token !== 'string' || currentAuth.token.trim() === '') {
+          console.warn('⚠️ Token vuoto o invalido, logout')
+          set({ auth: { isAuthenticated: false, token: null, user: null } })
+          return false
+        }
         
         // TODO: Opzionale - verifica validità token con API
         return true
