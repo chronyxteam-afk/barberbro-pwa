@@ -75,7 +75,7 @@ export const useStore = create(
             return { success: false, error: result.error || 'Login fallito' }
           }
           
-          // Salva token e user in state
+          // Salva token e user in state (persist si occuperà di salvare in localStorage)
           set({
             auth: {
               isAuthenticated: true,
@@ -89,10 +89,6 @@ export const useStore = create(
             },
             loading: false
           })
-          
-          // Salva token in localStorage (per persist)
-          localStorage.setItem('barberbro_auth_token', result.token)
-          localStorage.setItem('barberbro_user_email', result.user.email)
           
           console.log('✅ Login riuscito:', result.user.name)
           
@@ -115,36 +111,23 @@ export const useStore = create(
           currentStep: 'welcome'
         })
         
-        // Rimuovi da localStorage
-        localStorage.removeItem('barberbro_auth_token')
-        localStorage.removeItem('barberbro_user_email')
-        
         console.log('👋 Logout eseguito')
       },
       
       // Verifica se token è scaduto (chiamato all'avvio)
       checkAuth: async () => {
-        const token = localStorage.getItem('barberbro_auth_token')
-        const email = localStorage.getItem('barberbro_user_email')
+        const currentAuth = get().auth
         
-        if (!token || !email) {
-          // Nessun token salvato
+        if (!currentAuth?.token || !currentAuth?.user) {
+          // Nessun auth salvato
           set({ auth: { isAuthenticated: false, token: null, user: null } })
           return false
         }
         
-        // TODO: Verifica token con API (opzionale)
-        // Per ora assumiamo che se esiste è valido
-        // In produzione, dovresti fare una chiamata API per verificare
+        // Token presente nello state persistito
+        console.log('✅ Auth recuperato da cache:', currentAuth.user?.email)
         
-        set({
-          auth: {
-            isAuthenticated: true,
-            token: token,
-            user: { email } // Dati parziali, saranno riempiti da loadCustomer
-          }
-        })
-        
+        // TODO: Opzionale - verifica validità token con API
         return true
       },
       

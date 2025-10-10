@@ -12,8 +12,17 @@ class ApiService {
   // Helper per fetch con error handling
   async fetchAPI(endpoint, options = {}) {
     try {
-      // Ottieni token da localStorage
-      const token = localStorage.getItem('barberbro_auth_token')
+      // Ottieni token dal persist storage di Zustand
+      let token = null
+      try {
+        const persistedState = localStorage.getItem('barberbro-storage')
+        if (persistedState) {
+          const parsed = JSON.parse(persistedState)
+          token = parsed.state?.auth?.token
+        }
+      } catch (e) {
+        console.warn('⚠️ Errore lettura token da persist:', e)
+      }
       
       // Per GET, passa token come query param invece di header (evita CORS preflight)
       const tokenParam = token ? `&authorization=${encodeURIComponent(token)}` : ''
@@ -38,9 +47,9 @@ class ApiService {
       // Gestisci errori auth
       if (data.statusCode === 401) {
         // Token scaduto/invalido → logout automatico
-        console.warn('🔒 Token scaduto, logout automatico')
-        localStorage.removeItem('barberbro_auth_token')
-        localStorage.removeItem('barberbro_user_email')
+        console.warn('🔒 Token scaduto, ricarica necessaria')
+        // Rimuovi tutto il persist storage per forzare logout
+        localStorage.removeItem('barberbro-storage')
         window.location.reload() // Forza reload per mostrare LoginScreen
       }
       
