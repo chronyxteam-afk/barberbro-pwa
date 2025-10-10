@@ -186,7 +186,15 @@ export const useStore = create(
           const result = await apiService.getServices()
           if (result.success && result.servizi) {
             console.log('✅ Servizi caricati:', result.servizi.length)
-            set({ services: result.servizi, loading: false })
+            // Mappa i campi API (id, name) ai campi frontend (sv_ID, sv_name)
+            const mappedServices = result.servizi.map(sv => ({
+              sv_ID: sv.id,
+              sv_name: sv.name,
+              sv_duration: sv.duration,
+              sv_price: sv.price,
+              sv_description: sv.description || ''
+            }))
+            set({ services: mappedServices, loading: false })
           } else {
             console.error('❌ Errore caricamento servizi:', result.error)
             set({ loading: false, error: result.error })
@@ -204,7 +212,16 @@ export const useStore = create(
           const result = await apiService.getOperators()
           if (result.success && result.operatori) {
             console.log('✅ Operatori caricati:', result.operatori.length)
-            set({ operators: result.operatori, loading: false })
+            // Mappa i campi API (id, name) ai campi frontend (op_ID, op_name)
+            const mappedOperators = result.operatori.map(op => ({
+              op_ID: op.id,
+              op_name: op.name,
+              op_workStart: op.workStart,
+              op_workEnd: op.workEnd,
+              op_breakStart: op.breakStart,
+              op_breakEnd: op.breakEnd
+            }))
+            set({ operators: mappedOperators, loading: false })
           } else {
             console.error('❌ Errore caricamento operatori:', result.error)
             set({ loading: false, error: result.error })
