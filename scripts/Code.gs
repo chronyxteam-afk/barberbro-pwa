@@ -1745,7 +1745,8 @@ function apiLogin(email) {
  * Endpoint GET per Web App - API REST completa per PWA
  */
 function doGet(e) {
-  const action = e.parameter.action;
+  // Supporta sia 'endpoint' (PWA) che 'action' (AppSheet legacy)
+  const action = e.parameter.endpoint || e.parameter.action;
   
   // CORS Headers per accesso pubblico
   const output = ContentService.createTextOutput();

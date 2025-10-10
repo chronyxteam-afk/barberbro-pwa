@@ -121,19 +121,7 @@ class ApiService {
 
   // Slot disponibili
   async getSlots(filters = {}) {
-    const params = new URLSearchParams({
-      action: 'slot',
-      ...filters
-    })
-    
-    try {
-      const response = await fetch(`${this.baseUrl}?${params}`)
-      const data = await response.json()
-      return data
-    } catch (error) {
-      console.error('getSlots error:', error)
-      return { success: false, error: error.message }
-    }
+    return this.fetchAPI('slot', { params: filters })
   }
 
   // Dati cliente (returning customer)

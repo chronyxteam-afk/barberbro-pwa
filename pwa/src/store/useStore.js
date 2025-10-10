@@ -190,54 +190,56 @@ export const useStore = create(
       
       // Carica servizi
       loadServices: async () => {
-        // MOCK: Dati già caricati nello state iniziale
-        // Quando hai il backend, rimuovi questo commento e usa l'API:
-        /*
         set({ loading: true })
         try {
           const result = await apiService.getServices()
-          if (result.success) {
+          if (result.success && result.servizi) {
+            console.log('✅ Servizi caricati:', result.servizi.length)
             set({ services: result.servizi, loading: false })
+          } else {
+            console.error('❌ Errore caricamento servizi:', result.error)
+            set({ loading: false, error: result.error })
           }
         } catch (error) {
+          console.error('❌ Errore loadServices:', error)
           set({ error: error.message, loading: false })
         }
-        */
-        console.log('📦 Servizi mock già caricati:', get().services.length)
       },
       
       // Carica operatori
       loadOperators: async () => {
-        // MOCK: Dati già caricati
-        console.log('👨‍💼 Operatori mock già caricati:', get().operators.length)
+        set({ loading: true })
+        try {
+          const result = await apiService.getOperators()
+          if (result.success && result.operatori) {
+            console.log('✅ Operatori caricati:', result.operatori.length)
+            set({ operators: result.operatori, loading: false })
+          } else {
+            console.error('❌ Errore caricamento operatori:', result.error)
+            set({ loading: false, error: result.error })
+          }
+        } catch (error) {
+          console.error('❌ Errore loadOperators:', error)
+          set({ error: error.message, loading: false })
+        }
       },
       
       // Carica slot disponibili
       loadSlots: async (filters = {}) => {
-        // MOCK: Filtra gli slot in base alle preferenze
-        const { selectedService, selectedOperator, preferences } = get()
-        let filteredSlots = [...get().slots]
-        
-        // Filtra per operatore se selezionato
-        if (selectedOperator) {
-          filteredSlots = filteredSlots.filter(s => s.op_ID === selectedOperator.op_ID)
+        set({ loading: true })
+        try {
+          const result = await apiService.getSlots(filters)
+          if (result.success && result.slot) {
+            console.log('✅ Slot caricati:', result.slot.length)
+            set({ slots: result.slot, loading: false })
+          } else {
+            console.error('❌ Errore caricamento slot:', result.error)
+            set({ loading: false, error: result.error })
+          }
+        } catch (error) {
+          console.error('❌ Errore loadSlots:', error)
+          set({ error: error.message, loading: false })
         }
-        
-        // Filtra per fascia oraria se selezionata
-        if (preferences.timeSlot && preferences.timeSlot !== 'flexible') {
-          filteredSlots = filteredSlots.filter(slot => {
-            const time = slot.at_startDateTime.split(' ')[1].split(':')[0]
-            const hour = parseInt(time)
-            
-            if (preferences.timeSlot === 'morning') return hour >= 8 && hour < 12
-            if (preferences.timeSlot === 'afternoon') return hour >= 14 && hour < 18
-            if (preferences.timeSlot === 'evening') return hour >= 18 && hour < 21
-            return true
-          })
-        }
-        
-        set({ slots: filteredSlots })
-        console.log('📅 Slot filtrati:', filteredSlots.length)
       },
       
       // Crea prenotazione
