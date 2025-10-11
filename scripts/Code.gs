@@ -2198,7 +2198,7 @@ function apiGetSlot(params) {
     // Parse date di inizio e fine
     let dataInizioDate = new Date();
     let dataFineDate = new Date();
-    dataFineDate.setDate(dataFineDate.getDate() + 30); // Default 30 giorni
+    dataFineDate.setDate(dataFineDate.getDate() + 365); // Default 365 giorni (1 anno)
     
     if (params.dataInizio) {
       dataInizioDate = parseDateTime(params.dataInizio);
