@@ -3,8 +3,6 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import { useStore } from './store/useStore'
 import WelcomeScreen from './components/WelcomeScreen'
 import ServiceSelector from './components/ServiceSelector'
-import PathChoice from './components/PathChoice'
-import QuickSlots from './components/QuickSlots'
 import OperatorList from './components/OperatorList'
 import SlotCalendar from './components/SlotCalendar'
 import BookingForm from './components/BookingForm'
@@ -94,10 +92,6 @@ function App() {
         return <WelcomeScreen />
       case 'service':
         return <ServiceSelector />
-      case 'path':
-        return <PathChoice />
-      case 'quick-slots':
-        return <QuickSlots />
       case 'operators':
         return <OperatorList />
       case 'calendar':

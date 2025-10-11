@@ -6,7 +6,13 @@ export default function OperatorList() {
   const handleSelect = (operator) => {
     selectOperator(operator)
     // Filtra slot lato client (veloce, no API call)
-    filterSlots({ operatoreId: operator.op_ID })
+    if (operator.op_ID === 'all') {
+      // "Mi Sento Fortunato" - Mostra TUTTI gli slot di tutti gli operatori
+      filterSlots({}) // Nessun filtro operatore
+    } else {
+      // Operatore specifico - Filtra per operatore
+      filterSlots({ operatoreId: operator.op_ID })
+    }
     setStep('calendar')
   }
 
@@ -20,6 +26,25 @@ export default function OperatorList() {
       </div>
 
       <div className="max-w-md mx-auto px-6 py-6 space-y-4">
+        {/* Pulsante "Mi Sento Fortunato" */}
+        <button
+          onClick={() => handleSelect({ op_ID: 'all', op_name: 'Qualsiasi operatore' })}
+          className="card-hover w-full text-left p-6 bg-gradient-to-r from-primary to-accent text-white"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-xl mb-1">
+                🍀 Mi Sento Fortunato
+              </h3>
+              <p className="text-sm opacity-90">
+                Mostra tutti gli slot disponibili
+              </p>
+            </div>
+            <div className="text-3xl">✨</div>
+          </div>
+        </button>
+
+        {/* Lista operatori */}
         {operators.map(operator => (
           <button
             key={operator.op_ID}

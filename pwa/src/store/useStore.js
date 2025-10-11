@@ -247,15 +247,47 @@ export const useStore = create(
           const result = await apiService.getSlots(apiFilters)
           console.log('📦 Risposta API slot:', result)
           
+          // Calcola at_endDateTime per ogni slot usando la durata del servizio e i buffer
+          const config = get().config
+          const selectedService = get().selectedService
+          
+          const bufferPrima = config.buffer_prima || 0
+          const bufferDopo = config.buffer_dopo || 0
+          const durata = selectedService?.sv_duration || 30
+          
           // L'API restituisce "slots" (plurale), non "slot"
           if (result.success && result.slots) {
             console.log('✅ Slot caricati:', result.slots.length)
-            // Salva TUTTI gli slot grezzi
+            
+            // Calcola at_endDateTime per ogni slot
+            // Formula: endDateTime = startDateTime + durata + bufferPrima + bufferDopo
+            const slotsWithEndTime = result.slots.map(slot => {
+              const startDate = new Date(slot.at_startDateTime)
+              const totalMinutes = durata + bufferPrima + bufferDopo
+              const endDate = new Date(startDate.getTime() + totalMinutes * 60000)
+              
+              return {
+                ...slot,
+                at_endDateTime: endDate.toISOString(),
+                // Aggiungi anche formattazione leggibile
+                at_endDateTime_formatted: endDate.toLocaleString('it-IT', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })
+              }
+            })
+            
+            // Salva TUTTI gli slot con endDateTime calcolato
             set({ 
-              slots: result.slots,
-              allSlots: result.slots, // Backup per filtri client-side
+              slots: slotsWithEndTime,
+              allSlots: slotsWithEndTime, // Backup per filtri client-side
               loading: false 
             })
+            
+            console.log(`⏱️ Calcolato at_endDateTime per ${slotsWithEndTime.length} slot (durata: ${durata}min + buffer: ${bufferPrima + bufferDopo}min)`)
           } else if (result.success && result.slots === undefined) {
             // Caso in cui success=true ma manca il campo slots
             console.warn('⚠️ API success ma slots undefined, array vuoto?')
@@ -274,10 +306,11 @@ export const useStore = create(
       // Filtra slot lato client (veloce, no API call)
       filterSlots: (filters = {}) => {
         const allSlots = get().allSlots || []
+        const preferences = get().preferences
         
         let filtered = [...allSlots]
         
-        // Filtra per operatore
+        // Filtra per operatore (SOLO se specificato, altrimenti mostra tutti)
         if (filters.operatoreId) {
           filtered = filtered.filter(slot => slot.or_ID === filters.operatoreId)
         }
@@ -291,18 +324,26 @@ export const useStore = create(
           })
         }
         
-        // Filtra per fascia oraria
-        if (filters.fascia) {
+        // Filtra per fascia oraria dalle preferenze utente (se impostate)
+        const fasciaPreferita = preferences?.timeSlot
+        if (fasciaPreferita && fasciaPreferita !== 'flexible') {
           filtered = filtered.filter(slot => {
             const hour = new Date(slot.at_startDateTime).getHours()
-            if (filters.fascia === 'morning') return hour >= 8 && hour < 12
-            if (filters.fascia === 'afternoon') return hour >= 12 && hour < 18
-            if (filters.fascia === 'evening') return hour >= 18 && hour < 21
+            if (fasciaPreferita === 'morning') return hour >= 8 && hour < 12
+            if (fasciaPreferita === 'afternoon') return hour >= 12 && hour < 18
+            if (fasciaPreferita === 'evening') return hour >= 18 && hour < 21
             return true
           })
         }
         
-        console.log(`🔍 Filtro client-side: ${allSlots.length} → ${filtered.length} slot`)
+        // Ordina per data (dal più vicino al più lontano)
+        filtered.sort((a, b) => {
+          const dateA = new Date(a.at_startDateTime)
+          const dateB = new Date(b.at_startDateTime)
+          return dateA - dateB
+        })
+        
+        console.log(`🔍 Filtro client-side: ${allSlots.length} → ${filtered.length} slot ${filters.operatoreId ? `(operatore: ${filters.operatoreId})` : '(tutti gli operatori)'}`)
         set({ slots: filtered })
       },
       
@@ -373,14 +414,16 @@ export const useStore = create(
       // Navigazione
       setStep: (step) => set({ currentStep: step }),
       nextStep: () => {
-        const steps = ['welcome', 'service', 'path', 'quick-slots', 'operators', 'calendar', 'form', 'confirm']
+        // Nuovo flusso semplificato: welcome → service → operators → calendar → form → confirm
+        const steps = ['welcome', 'service', 'operators', 'calendar', 'form', 'confirm']
         const currentIndex = steps.indexOf(get().currentStep)
         if (currentIndex < steps.length - 1) {
           set({ currentStep: steps[currentIndex + 1] })
         }
       },
       prevStep: () => {
-        const steps = ['welcome', 'service', 'path', 'quick-slots', 'operators', 'calendar', 'form', 'confirm']
+        // Nuovo flusso semplificato: welcome → service → operators → calendar → form → confirm
+        const steps = ['welcome', 'service', 'operators', 'calendar', 'form', 'confirm']
         const currentIndex = steps.indexOf(get().currentStep)
         if (currentIndex > 0) {
           set({ currentStep: steps[currentIndex - 1] })
