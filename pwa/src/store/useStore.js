@@ -261,29 +261,39 @@ export const useStore = create(
             
             // Calcola at_endDateTime per ogni slot
             // Formula: endDateTime = startDateTime + durata + bufferPrima + bufferDopo
-            const slotsWithEndTime = result.slots.map(slot => {
-              const startDate = new Date(slot.at_startDateTime)
-              
-              // Trova il servizio associato allo slot per ottenere la durata
-              const service = services.find(s => s.sv_ID === slot.sv_ID)
-              const durata = service?.sv_duration || 30
-              
-              const totalMinutes = durata + bufferPrima + bufferDopo
-              const endDate = new Date(startDate.getTime() + totalMinutes * 60000)
-              
-              return {
-                ...slot,
-                at_endDateTime: endDate.toISOString(),
-                // Aggiungi anche formattazione leggibile
-                at_endDateTime_formatted: endDate.toLocaleString('it-IT', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })
-              }
-            })
+            const slotsWithEndTime = result.slots
+              .filter(slot => {
+                // Filtra slot con date invalide
+                const startDate = new Date(slot.at_startDateTime)
+                if (isNaN(startDate.getTime())) {
+                  console.warn(`⚠️ Slot con data invalida ignorato:`, slot)
+                  return false
+                }
+                return true
+              })
+              .map(slot => {
+                const startDate = new Date(slot.at_startDateTime)
+                
+                // Trova il servizio associato allo slot per ottenere la durata
+                const service = services.find(s => s.sv_ID === slot.sv_ID)
+                const durata = service?.sv_duration || 30
+                
+                const totalMinutes = durata + bufferPrima + bufferDopo
+                const endDate = new Date(startDate.getTime() + totalMinutes * 60000)
+                
+                return {
+                  ...slot,
+                  at_endDateTime: endDate.toISOString(),
+                  // Aggiungi anche formattazione leggibile
+                  at_endDateTime_formatted: endDate.toLocaleString('it-IT', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })
+                }
+              })
             
             // Salva TUTTI gli slot con endDateTime calcolato
             set({ 
