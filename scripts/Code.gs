@@ -1360,11 +1360,17 @@ function getAllFreeSlots(dataInizio, dataFine, operatoreId = null) {
   const range = sheetAppuntamenti.getRange(2, 1, ultimaRiga - 1, 7);
   const data = range.getValues();
   
+  Logger.log(`📊 getAllFreeSlots: Righe totali nel foglio: ${data.length}`);
+  
   const slotsLiberi = [];
+  let countStatus = { Libero: 0, Prenotato: 0, NonDisponibile: 0, Altro: 0 };
+  let countFuoriRange = 0;
   
   // Parse date inizio e fine per confronto
   const dataInizioMs = dataInizio.getTime();
   const dataFineMs = dataFine.getTime();
+  
+  Logger.log(`📅 Range richiesto: ${formattaData(dataInizio)} - ${formattaData(dataFine)}`);
   
   for (let i = 0; i < data.length; i++) {
     const row = data[i];
@@ -1376,6 +1382,12 @@ function getAllFreeSlots(dataInizio, dataFine, operatoreId = null) {
     const or_ID = row[4];
     const at_status = row[5];
     const at_notes = row[6];
+    
+    // Conta status
+    if (at_status === 'Libero') countStatus.Libero++;
+    else if (at_status === 'Prenotato') countStatus.Prenotato++;
+    else if (at_status === 'Non Disponibile') countStatus.NonDisponibile++;
+    else countStatus.Altro++;
     
     // Salta slot non liberi
     if (at_status !== 'Libero') continue;
@@ -1395,7 +1407,10 @@ function getAllFreeSlots(dataInizio, dataFine, operatoreId = null) {
     
     // Filtra per range di date
     const slotMs = slotDate.getTime();
-    if (slotMs < dataInizioMs || slotMs > dataFineMs) continue;
+    if (slotMs < dataInizioMs || slotMs > dataFineMs) {
+      countFuoriRange++;
+      continue;
+    }
     
     // Aggiungi slot all'array
     slotsLiberi.push({
@@ -1408,6 +1423,10 @@ function getAllFreeSlots(dataInizio, dataFine, operatoreId = null) {
       at_notes: at_notes || ''
     });
   }
+  
+  Logger.log(`📊 Status: Libero=${countStatus.Libero}, Prenotato=${countStatus.Prenotato}, NonDisp=${countStatus.NonDisponibile}, Altro=${countStatus.Altro}`);
+  Logger.log(`📅 Slot Liberi fuori range: ${countFuoriRange}`);
+  Logger.log(`✅ Slot Liberi nel range: ${slotsLiberi.length}`);
   
   return slotsLiberi;
 }

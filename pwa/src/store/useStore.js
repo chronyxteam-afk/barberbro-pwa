@@ -257,16 +257,18 @@ export const useStore = create(
           
           // L'API restituisce "slots" (plurale), non "slot"
           if (result.success && result.slots) {
-            console.log('✅ Slot caricati:', result.slots.length)
+            console.log('✅ Slot caricati dall\'API:', result.slots.length)
             
             // Calcola at_endDateTime per ogni slot
             // Formula: endDateTime = startDateTime + durata + bufferPrima + bufferDopo
+            let invalidCount = 0
             const slotsWithEndTime = result.slots
               .filter(slot => {
                 // Filtra slot con date invalide
                 const startDate = new Date(slot.at_startDateTime)
                 if (isNaN(startDate.getTime())) {
                   console.warn(`⚠️ Slot con data invalida ignorato:`, slot)
+                  invalidCount++
                   return false
                 }
                 return true
@@ -302,7 +304,11 @@ export const useStore = create(
               loading: false 
             })
             
-            console.log(`⏱️ Calcolato at_endDateTime per ${slotsWithEndTime.length} slot (buffer: ${bufferPrima + bufferDopo}min)`)
+            if (invalidCount > 0) {
+              console.warn(`⚠️ ${invalidCount} slot con date invalide sono stati scartati`)
+            }
+            console.log(`⏱️ Calcolato at_endDateTime per ${slotsWithEndTime.length} slot validi (buffer: ${bufferPrima + bufferDopo}min)`)
+            console.log(`📊 Riepilogo: API=${result.slots.length} | Invalidi=${invalidCount} | Validi=${slotsWithEndTime.length}`)
           } else if (result.success && result.slots === undefined) {
             // Caso in cui success=true ma manca il campo slots
             console.warn('⚠️ API success ma slots undefined, array vuoto?')
