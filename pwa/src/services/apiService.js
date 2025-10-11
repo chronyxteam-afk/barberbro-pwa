@@ -74,15 +74,38 @@ class ApiService {
     }
   }
 
-  // POST helper
+  // POST helper - Usa GET per evitare CORS preflight con Apps Script
   async postAPI(data) {
     try {
-      const response = await fetch(this.baseUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
+      // Ottieni token dal persist storage di Zustand
+      let token = null
+      try {
+        const persistedState = localStorage.getItem('barberbro-storage')
+        if (persistedState) {
+          const parsed = JSON.parse(persistedState)
+          token = parsed.state?.auth?.token
+        }
+      } catch (e) {
+        console.warn('⚠️ Errore lettura token da persist:', e)
+      }
+      
+      // Converti data in query params (Apps Script non supporta CORS preflight per POST con JSON)
+      const params = new URLSearchParams()
+      for (const [key, value] of Object.entries(data)) {
+        if (value !== undefined && value !== null) {
+          params.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value))
+        }
+      }
+      
+      // Aggiungi token
+      if (token) {
+        params.append('authorization', token)
+      }
+      
+      const url = `${this.baseUrl}?${params.toString()}`
+      
+      const response = await fetch(url, {
+        method: 'GET' // Usa GET invece di POST per evitare CORS preflight
       })
 
       if (!response.ok) {

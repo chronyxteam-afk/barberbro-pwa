@@ -1966,6 +1966,16 @@ function doGet(e) {
         result = apiGetServiziCompatibili(e.parameter.slotId, e.parameter.operatoreId);
         break;
       
+      // Prenotazione (supporto anche GET per evitare CORS preflight)
+      case 'prenota':
+        result = apiCreaPrenotazione(e.parameter);
+        break;
+      
+      // Cancellazione (supporto anche GET per evitare CORS preflight)
+      case 'cancella':
+        result = apiCancellaPrenotazione(e.parameter.appointmentId, e.parameter.phone);
+        break;
+      
       // Legacy support (compatibilità AppSheet)
       case 'getSlotDisponibili':
         const slots = getSlotDisponibili(e.parameter.servizioId, e.parameter.data, e.parameter.operatoreId || null);
@@ -1980,7 +1990,7 @@ function doGet(e) {
         result = {
           success: false,
           error: 'Action non valida',
-          available_actions: ['config', 'login', 'servizi', 'operatori', 'slot', 'prenotazioni', 'cliente', 'servizi-compatibili']
+          available_actions: ['config', 'login', 'servizi', 'operatori', 'slot', 'prenotazioni', 'cliente', 'servizi-compatibili', 'prenota', 'cancella']
         };
     }
     
