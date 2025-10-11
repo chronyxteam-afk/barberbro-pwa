@@ -39,6 +39,7 @@ export const useStore = create(
       services: [],
       operators: [],
       slots: [],
+      allSlots: [], // Backup di tutti gli slot per filtri client-side
       
       // Booking flow
       currentStep: 'welcome',
@@ -232,22 +233,33 @@ export const useStore = create(
         }
       },
       
-      // Carica slot disponibili
+      // Carica slot disponibili - TUTTI per il servizio selezionato
       loadSlots: async (filters = {}) => {
         set({ loading: true })
         try {
-          console.log('🔍 loadSlots con filtri:', filters)
-          const result = await apiService.getSlots(filters)
+          // Carica SOLO con servizioId, senza altri filtri
+          // Il filtro per operatore/data/fascia verrà fatto lato client
+          const apiFilters = {
+            servizioId: filters.servizioId
+          }
+          
+          console.log('🔍 loadSlots - carico TUTTI gli slot per servizio:', apiFilters.servizioId)
+          const result = await apiService.getSlots(apiFilters)
           console.log('📦 Risposta API slot:', result)
           
           // L'API restituisce "slots" (plurale), non "slot"
           if (result.success && result.slots) {
             console.log('✅ Slot caricati:', result.slots.length)
-            set({ slots: result.slots, loading: false })
+            // Salva TUTTI gli slot grezzi
+            set({ 
+              slots: result.slots,
+              allSlots: result.slots, // Backup per filtri client-side
+              loading: false 
+            })
           } else if (result.success && result.slots === undefined) {
             // Caso in cui success=true ma manca il campo slots
             console.warn('⚠️ API success ma slots undefined, array vuoto?')
-            set({ slots: [], loading: false })
+            set({ slots: [], allSlots: [], loading: false })
           } else {
             console.error('❌ Errore caricamento slot:', result.error || 'Errore sconosciuto')
             console.error('📋 Risposta completa:', JSON.stringify(result))
@@ -257,6 +269,41 @@ export const useStore = create(
           console.error('❌ Errore loadSlots:', error)
           set({ error: error.message, loading: false })
         }
+      },
+      
+      // Filtra slot lato client (veloce, no API call)
+      filterSlots: (filters = {}) => {
+        const allSlots = get().allSlots || []
+        
+        let filtered = [...allSlots]
+        
+        // Filtra per operatore
+        if (filters.operatoreId) {
+          filtered = filtered.filter(slot => slot.or_ID === filters.operatoreId)
+        }
+        
+        // Filtra per data
+        if (filters.data) {
+          const targetDate = new Date(filters.data).toDateString()
+          filtered = filtered.filter(slot => {
+            const slotDate = new Date(slot.at_startDateTime).toDateString()
+            return slotDate === targetDate
+          })
+        }
+        
+        // Filtra per fascia oraria
+        if (filters.fascia) {
+          filtered = filtered.filter(slot => {
+            const hour = new Date(slot.at_startDateTime).getHours()
+            if (filters.fascia === 'morning') return hour >= 8 && hour < 12
+            if (filters.fascia === 'afternoon') return hour >= 12 && hour < 18
+            if (filters.fascia === 'evening') return hour >= 18 && hour < 21
+            return true
+          })
+        }
+        
+        console.log(`🔍 Filtro client-side: ${allSlots.length} → ${filtered.length} slot`)
+        set({ slots: filtered })
       },
       
       // Crea prenotazione
@@ -370,6 +417,7 @@ export const useStore = create(
         services: state.services,
         operators: state.operators,
         slots: state.slots,
+        allSlots: state.allSlots, // Salva anche il backup per filtri client-side
         preferences: state.preferences
       })
     }

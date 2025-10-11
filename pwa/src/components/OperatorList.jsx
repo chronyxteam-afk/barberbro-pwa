@@ -1,15 +1,12 @@
 import { useStore } from '../store/useStore'
 
 export default function OperatorList() {
-  const { operators, selectOperator, loadSlots, setStep, prevStep, selectedService } = useStore()
+  const { operators, selectOperator, filterSlots, setStep, prevStep } = useStore()
 
-  const handleSelect = async (operator) => {
+  const handleSelect = (operator) => {
     selectOperator(operator)
-    // Passa sia servizioId che operatoreId
-    await loadSlots({ 
-      servizioId: selectedService.sv_ID,
-      operatoreId: operator.op_ID 
-    })
+    // Filtra slot lato client (veloce, no API call)
+    filterSlots({ operatoreId: operator.op_ID })
     setStep('calendar')
   }
 
