@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { useStore } from './store/useStore'
 import WelcomeScreen from './components/WelcomeScreen'
@@ -24,6 +24,8 @@ function App() {
     loadConfig,
     checkAuth
   } = useStore()
+  
+  const [showConfigError, setShowConfigError] = useState(false)
 
   useEffect(() => {
     // 1. Carica configurazione (pubblico, no auth)
@@ -31,6 +33,13 @@ function App() {
     
     // 2. Verifica se utente già loggato
     checkAuth()
+    
+    // 3. Timeout per mostrare errore dopo 10 secondi se config non carica
+    const timer = setTimeout(() => {
+      setShowConfigError(true)
+    }, 10000)
+    
+    return () => clearTimeout(timer)
   }, [])
 
   // Forza reload config se manca google_client_id (config cache obsoleta)
@@ -66,7 +75,11 @@ function App() {
   // Google OAuth Provider wrapper
   const googleClientId = config.google_client_id
   
+  // Mostra loader per i primi 10 secondi, poi eventualmente l'errore
   if (!googleClientId) {
+    if (!showConfigError) {
+      return <LoadingScreen message="Caricamento configurazione..." />
+    }
     return (
       <ErrorScreen 
         error="Configurazione OAuth mancante. Contatta l'amministratore per configurare google_client_id nel foglio ConfigPWA." 

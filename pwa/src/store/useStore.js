@@ -240,9 +240,14 @@ export const useStore = create(
           const result = await apiService.getSlots(filters)
           console.log('📦 Risposta API slot:', result)
           
-          if (result.success && result.slot) {
-            console.log('✅ Slot caricati:', result.slot.length)
-            set({ slots: result.slot, loading: false })
+          // L'API restituisce "slots" (plurale), non "slot"
+          if (result.success && result.slots) {
+            console.log('✅ Slot caricati:', result.slots.length)
+            set({ slots: result.slots, loading: false })
+          } else if (result.success && result.slots === undefined) {
+            // Caso in cui success=true ma manca il campo slots
+            console.warn('⚠️ API success ma slots undefined, array vuoto?')
+            set({ slots: [], loading: false })
           } else {
             console.error('❌ Errore caricamento slot:', result.error || 'Errore sconosciuto')
             console.error('📋 Risposta completa:', JSON.stringify(result))
