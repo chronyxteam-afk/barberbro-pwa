@@ -1,12 +1,12 @@
 import { useStore } from '../store/useStore'
 
 export default function ServiceSelector() {
-  const { services, selectService, loadSlots, setStep, prevStep } = useStore()
+  const { services, selectService, filterSlots, setStep, prevStep } = useStore()
 
-  const handleSelect = async (service) => {
+  const handleSelect = (service) => {
     selectService(service)
-    // Carica TUTTI gli slot per questo servizio
-    await loadSlots({ servizioId: service.sv_ID })
+    // Filtra gli slot già caricati per questo servizio (lato client, istantaneo)
+    filterSlots({ servizioId: service.sv_ID })
     // Vai direttamente alla scelta operatori
     setStep('operators')
   }

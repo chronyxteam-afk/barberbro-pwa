@@ -237,23 +237,23 @@ export const useStore = create(
       loadSlots: async (filters = {}) => {
         set({ loading: true })
         try {
-          // Carica SOLO con servizioId, senza altri filtri
-          // Il filtro per operatore/data/fascia verrà fatto lato client
-          const apiFilters = {
-            servizioId: filters.servizioId
+          // Se non c'è servizioId, carica TUTTI gli slot liberi
+          // Altrimenti carica solo per quel servizio
+          const apiFilters = {}
+          if (filters.servizioId) {
+            apiFilters.servizioId = filters.servizioId
           }
           
-          console.log('🔍 loadSlots - carico TUTTI gli slot per servizio:', apiFilters.servizioId)
+          console.log('🔍 loadSlots - carico slot con filtri:', apiFilters.servizioId ? `servizio ${apiFilters.servizioId}` : 'TUTTI gli slot liberi')
           const result = await apiService.getSlots(apiFilters)
           console.log('📦 Risposta API slot:', result)
           
-          // Calcola at_endDateTime per ogni slot usando la durata del servizio e i buffer
+          // Calcola at_endDateTime per ogni slot
           const config = get().config
-          const selectedService = get().selectedService
+          const services = get().services
           
           const bufferPrima = config.buffer_prima || 0
           const bufferDopo = config.buffer_dopo || 0
-          const durata = selectedService?.sv_duration || 30
           
           // L'API restituisce "slots" (plurale), non "slot"
           if (result.success && result.slots) {
@@ -263,6 +263,11 @@ export const useStore = create(
             // Formula: endDateTime = startDateTime + durata + bufferPrima + bufferDopo
             const slotsWithEndTime = result.slots.map(slot => {
               const startDate = new Date(slot.at_startDateTime)
+              
+              // Trova il servizio associato allo slot per ottenere la durata
+              const service = services.find(s => s.sv_ID === slot.sv_ID)
+              const durata = service?.sv_duration || 30
+              
               const totalMinutes = durata + bufferPrima + bufferDopo
               const endDate = new Date(startDate.getTime() + totalMinutes * 60000)
               
@@ -287,7 +292,7 @@ export const useStore = create(
               loading: false 
             })
             
-            console.log(`⏱️ Calcolato at_endDateTime per ${slotsWithEndTime.length} slot (durata: ${durata}min + buffer: ${bufferPrima + bufferDopo}min)`)
+            console.log(`⏱️ Calcolato at_endDateTime per ${slotsWithEndTime.length} slot (buffer: ${bufferPrima + bufferDopo}min)`)
           } else if (result.success && result.slots === undefined) {
             // Caso in cui success=true ma manca il campo slots
             console.warn('⚠️ API success ma slots undefined, array vuoto?')
@@ -309,6 +314,11 @@ export const useStore = create(
         const preferences = get().preferences
         
         let filtered = [...allSlots]
+        
+        // Filtra per servizio (SOLO se specificato)
+        if (filters.servizioId) {
+          filtered = filtered.filter(slot => slot.sv_ID === filters.servizioId)
+        }
         
         // Filtra per operatore (SOLO se specificato, altrimenti mostra tutti)
         if (filters.operatoreId) {
@@ -343,7 +353,12 @@ export const useStore = create(
           return dateA - dateB
         })
         
-        console.log(`🔍 Filtro client-side: ${allSlots.length} → ${filtered.length} slot ${filters.operatoreId ? `(operatore: ${filters.operatoreId})` : '(tutti gli operatori)'}`)
+        const filterDesc = []
+        if (filters.servizioId) filterDesc.push(`servizio: ${filters.servizioId}`)
+        if (filters.operatoreId) filterDesc.push(`operatore: ${filters.operatoreId}`)
+        if (fasciaPreferita && fasciaPreferita !== 'flexible') filterDesc.push(`fascia: ${fasciaPreferita}`)
+        
+        console.log(`🔍 Filtro client-side: ${allSlots.length} → ${filtered.length} slot ${filterDesc.length > 0 ? `(${filterDesc.join(', ')})` : '(nessun filtro)'}`)
         set({ slots: filtered })
       },
       

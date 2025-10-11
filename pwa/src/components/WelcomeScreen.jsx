@@ -10,6 +10,7 @@ export default function WelcomeScreen() {
     setStep,
     loadServices,
     loadOperators,
+    loadSlots,
     logout,
     auth
   } = useStore()
@@ -23,16 +24,20 @@ export default function WelcomeScreen() {
         console.log('🔄 Inizio caricamento dati...')
         setIsLoadingData(true)
         
+        // Carica servizi, operatori E tutti gli slot liberi
         if (loadServices) {
           await loadServices()
         }
         if (loadOperators) {
           await loadOperators()
         }
-        // Gli slot vengono caricati solo dopo la selezione del servizio
-        // Non carichiamo slot all'avvio perché servizioId è obbligatorio
+        if (loadSlots) {
+          // Carica TUTTI gli slot liberi (senza filtri)
+          // L'API deve restituire tutti gli slot con at_status = "Libero"
+          await loadSlots({})
+        }
         
-        console.log('✅ Dati caricati dall\'API')
+        console.log('✅ Tutti i dati caricati dall\'API (servizi, operatori, slot)')
       } catch (error) {
         console.error('❌ Errore caricamento dati:', error)
         // Non bloccare l'interfaccia anche se caricamento fallisce
