@@ -36,7 +36,7 @@ jobs:
         run: npm run build
         working-directory: ./pwa
         env:
-          VITE_API_URL: https://script.google.com/macros/s/AKfycbz7rsOTUYpa83iPvyv_67HeBj7gtI2eXMc33wdvan-jpDP66-lsqGRQWpLa_cSMz46P/exec
+          VITE_API_URL: https://script.google.com/macros/s/AKfycbzOnpXJGVK-coa0uh2ooNzsP0uopYTlBmf_p1S6K-p0vaE3fKivoKqVdo-KmE4MYZzYQA/exec
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
