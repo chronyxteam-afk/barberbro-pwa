@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test API Diretto</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f7;
+    }
+    .test-box {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 { color: #1d1d1f; }
+    h2 { color: #007AFF; font-size: 18px; }
+    pre {
+      background: #f5f5f7;
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+    button {
+      background: #007AFF;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background: #0051D5;
+    }
+    .success { color: #34C759; font-weight: bold; }
+    .error { color: #FF3B30; font-weight: bold; }
+    .loading { color: #007AFF; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Test API Diretto - Apps Script</h1>
+  
+  <div class="test-box">
+    <h2>URL API in uso:</h2>
+    <pre id="apiUrl">Caricamento...</pre>
+  </div>
+
+  <div class="test-box">
+    <h2>Test 1: Carica slot SENZA servizioId</h2>
+    <button onclick="testSenzaServizioId()">🚀 Test API (senza servizioId)</button>
+    <p id="status1" class="loading">Pronto per il test</p>
+    <pre id="result1"></pre>
+  </div>
+
+  <div class="test-box">
+    <h2>Test 2: Carica slot CON servizioId</h2>
+    <button onclick="testConServizioId()">🚀 Test API (con servizioId)</button>
+    <p id="status2" class="loading">Pronto per il test</p>
+    <pre id="result2"></pre>
+  </div>
+
+  <script>
+    // URL dell'API
+    const API_URL = 'https://script.google.com/macros/s/AKfycbz9s8HRbrfA0_-CpD7wmrA5dZai_izqsVv6AGzM_U_3E8IM801B4S6jHiHZcSI7blHj7A/exec';
+    
+    document.getElementById('apiUrl').textContent = API_URL;
+
+    async function testSenzaServizioId() {
+      const status = document.getElementById('status1');
+      const result = document.getElementById('result1');
+      
+      status.className = 'loading';
+      status.textContent = '⏳ Test in corso...';
+      result.textContent = '';
+      
+      try {
+        const url = `${API_URL}?action=getSlots`;
+        console.log('🔍 Chiamata API:', url);
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        console.log('📦 Risposta:', data);
+        
+        if (data.success) {
+          status.className = 'success';
+          status.textContent = `✅ SUCCESS! Caricati ${data.total || 0} slot`;
+        } else {
+          status.className = 'error';
+          status.textContent = `❌ ERRORE: ${data.error}`;
+        }
+        
+        result.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        status.className = 'error';
+        status.textContent = `❌ ERRORE FETCH: ${error.message}`;
+        result.textContent = error.stack;
+      }
+    }
+
+    async function testConServizioId() {
+      const status = document.getElementById('status2');
+      const result = document.getElementById('result2');
+      
+      status.className = 'loading';
+      status.textContent = '⏳ Test in corso...';
+      result.textContent = '';
+      
+      try {
+        const url = `${API_URL}?action=getSlots&servizioId=e3a7f9b2`;
+        console.log('🔍 Chiamata API:', url);
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        console.log('📦 Risposta:', data);
+        
+        if (data.success) {
+          status.className = 'success';
+          status.textContent = `✅ SUCCESS! Caricati ${data.total || 0} slot per servizio`;
+        } else {
+          status.className = 'error';
+          status.textContent = `❌ ERRORE: ${data.error}`;
+        }
+        
+        result.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        status.className = 'error';
+        status.textContent = `❌ ERRORE FETCH: ${error.message}`;
+        result.textContent = error.stack;
+      }
+    }
+
+    // Test automatico all'avvio
+    window.addEventListener('load', () => {
+      console.log('🧪 Pagina di test caricata. URL API:', API_URL);
+    });
+  </script>
+</body>
+</html>
