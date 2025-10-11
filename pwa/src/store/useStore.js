@@ -2,6 +2,23 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { apiService } from '../services/apiService'
 
+// Helper per parsare date italiane DD/MM/YYYY HH:MM:SS
+const parseItalianDate = (dateStr) => {
+  if (!dateStr || typeof dateStr !== 'string') return null
+  
+  const [datePart, timePart] = dateStr.split(' ')
+  if (!datePart || !timePart) return null
+  
+  const [day, month, year] = datePart.split('/')
+  const [hour, minute, second] = timePart.split(':')
+  
+  // Crea data in formato ISO (che JavaScript capisce)
+  const isoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:${second?.padStart(2, '0') || '00'}`
+  const date = new Date(isoDate)
+  
+  return isNaN(date.getTime()) ? null : date
+}
+
 export const useStore = create(
   persist(
     (set, get) => ({
@@ -264,17 +281,20 @@ export const useStore = create(
             let invalidCount = 0
             const slotsWithEndTime = result.slots
               .filter(slot => {
-                // Filtra slot con date invalide
-                const startDate = new Date(slot.at_startDateTime)
-                if (isNaN(startDate.getTime())) {
+                // Filtra slot con date invalide usando la funzione helper
+                const startDate = parseItalianDate(slot.at_startDateTime)
+                
+                if (!startDate) {
                   console.warn(`⚠️ Slot con data invalida ignorato:`, slot)
                   invalidCount++
                   return false
                 }
+                
                 return true
               })
               .map(slot => {
-                const startDate = new Date(slot.at_startDateTime)
+                // Parse data con helper
+                const startDate = parseItalianDate(slot.at_startDateTime)
                 
                 // Trova il servizio associato allo slot per ottenere la durata
                 const service = services.find(s => s.sv_ID === slot.sv_ID)
@@ -345,8 +365,8 @@ export const useStore = create(
         if (filters.data) {
           const targetDate = new Date(filters.data).toDateString()
           filtered = filtered.filter(slot => {
-            const slotDate = new Date(slot.at_startDateTime).toDateString()
-            return slotDate === targetDate
+            const slotDate = parseItalianDate(slot.at_startDateTime)
+            return slotDate && slotDate.toDateString() === targetDate
           })
         }
         
@@ -354,7 +374,10 @@ export const useStore = create(
         const fasciaPreferita = preferences?.timeSlot
         if (fasciaPreferita && fasciaPreferita !== 'flexible') {
           filtered = filtered.filter(slot => {
-            const hour = new Date(slot.at_startDateTime).getHours()
+            const slotDate = parseItalianDate(slot.at_startDateTime)
+            if (!slotDate) return false
+            
+            const hour = slotDate.getHours()
             if (fasciaPreferita === 'morning') return hour >= 8 && hour < 12
             if (fasciaPreferita === 'afternoon') return hour >= 12 && hour < 18
             if (fasciaPreferita === 'evening') return hour >= 18 && hour < 21
@@ -364,8 +387,9 @@ export const useStore = create(
         
         // Ordina per data (dal più vicino al più lontano)
         filtered.sort((a, b) => {
-          const dateA = new Date(a.at_startDateTime)
-          const dateB = new Date(b.at_startDateTime)
+          const dateA = parseItalianDate(a.at_startDateTime)
+          const dateB = parseItalianDate(b.at_startDateTime)
+          if (!dateA || !dateB) return 0
           return dateA - dateB
         })
         
