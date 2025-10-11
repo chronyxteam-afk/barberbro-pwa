@@ -89,14 +89,6 @@ export default function WelcomeScreen() {
           {config?.welcome_message || 'Prenota il tuo appuntamento in pochi tap'}
         </p>
 
-        {/* Loading Indicator */}
-        {isLoadingData && (
-          <div className="mb-8 flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-3 border-[#007AFF] border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-sm text-[#86868b]">Caricamento dati...</p>
-          </div>
-        )}
-
         {/* Returning Customer Card */}
         {isReturningCustomer && customer && (
           <div className="card mb-8 animate-scaleIn bg-gradient-to-br from-blue-50 to-white border-[#007AFF]/20">
@@ -120,15 +112,18 @@ export default function WelcomeScreen() {
           <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
             <button
               onClick={() => handleTimePreference('flexible')}
-              className="card-hover py-6 flex flex-col items-center gap-2 group"
+              disabled={isLoadingData}
+              className={`card-hover py-6 flex flex-col items-center gap-2 group ${isLoadingData ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span className="text-3xl group-hover:scale-110 transition-transform duration-200">🍀</span>
               <span className="text-[15px] font-medium text-[#1d1d1f]">Primo disponibile</span>
+              {isLoadingData && <span className="text-xs text-[#007AFF]">Caricamento...</span>}
             </button>
             
             <button
               onClick={() => handleTimePreference('morning')}
-              className="card-hover py-6 flex flex-col items-center gap-2 group"
+              disabled={isLoadingData}
+              className={`card-hover py-6 flex flex-col items-center gap-2 group ${isLoadingData ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span className="text-3xl group-hover:scale-110 transition-transform duration-200">🌅</span>
               <span className="text-[15px] font-medium text-[#1d1d1f]">Mattina</span>
@@ -137,7 +132,8 @@ export default function WelcomeScreen() {
             
             <button
               onClick={() => handleTimePreference('afternoon')}
-              className="card-hover py-6 flex flex-col items-center gap-2 group"
+              disabled={isLoadingData}
+              className={`card-hover py-6 flex flex-col items-center gap-2 group ${isLoadingData ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span className="text-3xl group-hover:scale-110 transition-transform duration-200">☀️</span>
               <span className="text-[15px] font-medium text-[#1d1d1f]">Pomeriggio</span>
@@ -146,7 +142,8 @@ export default function WelcomeScreen() {
             
             <button
               onClick={() => handleTimePreference('evening')}
-              className="card-hover py-6 flex flex-col items-center gap-2 group"
+              disabled={isLoadingData}
+              className={`card-hover py-6 flex flex-col items-center gap-2 group ${isLoadingData ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span className="text-3xl group-hover:scale-110 transition-transform duration-200">🌆</span>
               <span className="text-[15px] font-medium text-[#1d1d1f]">Sera</span>
