@@ -1337,6 +1337,82 @@ function menuArchiviaAppuntamenti() {
 // ============================================================================
 
 /**
+ * Ottiene TUTTI gli slot liberi nel range di date specificato
+ * Usato quando servizioId non è specificato (caricamento iniziale PWA)
+ * 
+ * @param {Date} dataInizio - Data inizio range
+ * @param {Date} dataFine - Data fine range
+ * @param {string} operatoreId - ID operatore (opzionale, filtra per operatore)
+ * @return {Array} Array di tutti gli slot con status='Libero'
+ */
+function getAllFreeSlots(dataInizio, dataFine, operatoreId = null) {
+  const ss = getFoglio();
+  const sheetAppuntamenti = ss.getSheetByName('AppunTamenti');
+  
+  if (!sheetAppuntamenti) {
+    throw new Error('Foglio AppunTamenti non trovato!');
+  }
+  
+  const ultimaRiga = sheetAppuntamenti.getLastRow();
+  if (ultimaRiga < 2) return [];
+  
+  // Leggi TUTTE le righe del foglio (max 7 colonne)
+  const range = sheetAppuntamenti.getRange(2, 1, ultimaRiga - 1, 7);
+  const data = range.getValues();
+  
+  const slotsLiberi = [];
+  
+  // Parse date inizio e fine per confronto
+  const dataInizioMs = dataInizio.getTime();
+  const dataFineMs = dataFine.getTime();
+  
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    
+    const at_ID = row[0];
+    const at_startDateTime = row[1];
+    const cn_ID = row[2];
+    const sv_ID = row[3];
+    const or_ID = row[4];
+    const at_status = row[5];
+    const at_notes = row[6];
+    
+    // Salta slot non liberi
+    if (at_status !== 'Libero') continue;
+    
+    // Filtra per operatore se specificato
+    if (operatoreId && or_ID !== operatoreId) continue;
+    
+    // Parse data dello slot
+    let slotDate;
+    if (at_startDateTime instanceof Date) {
+      slotDate = at_startDateTime;
+    } else if (typeof at_startDateTime === 'string') {
+      slotDate = parseDateTime(at_startDateTime);
+    } else {
+      continue; // Salta se data non valida
+    }
+    
+    // Filtra per range di date
+    const slotMs = slotDate.getTime();
+    if (slotMs < dataInizioMs || slotMs > dataFineMs) continue;
+    
+    // Aggiungi slot all'array
+    slotsLiberi.push({
+      at_ID: at_ID,
+      at_startDateTime: formattaData(slotDate),
+      cn_ID: cn_ID || '',
+      sv_ID: sv_ID || '',
+      or_ID: or_ID,
+      at_status: at_status,
+      at_notes: at_notes || ''
+    });
+  }
+  
+  return slotsLiberi;
+}
+
+/**
  * Ottiene slot disponibili per un servizio in una specifica data
  * OTTIMIZZATO: Pre-parsing date, raggruppamento operatori, O(n log n), cache servizi
  * Considera buffer prima/dopo se abilitato
@@ -2110,17 +2186,14 @@ function apiGetOperatori() {
 
 /**
  * API: Restituisce slot disponibili con filtri avanzati
- * Parametri: servizioId, dataInizio, dataFine, operatoreId (opzionale), fascia (opzionale)
+ * Parametri: servizioId (opzionale), dataInizio, dataFine, operatoreId (opzionale), fascia (opzionale)
+ * Se servizioId non è specificato, restituisce TUTTI gli slot liberi
  */
 function apiGetSlot(params) {
   try {
-    const servizioId = params.servizioId;
+    const servizioId = params.servizioId || null;
     const operatoreId = params.operatoreId || null;
     const fascia = params.fascia; // 'morning', 'afternoon', 'evening'
-    
-    if (!servizioId) {
-      throw new Error('servizioId obbligatorio');
-    }
     
     // Parse date di inizio e fine
     let dataInizioDate = new Date();
@@ -2134,6 +2207,46 @@ function apiGetSlot(params) {
       dataFineDate = parseDateTime(params.dataFine);
     }
     
+    // Se NON c'è servizioId, carica TUTTI gli slot liberi dal foglio
+    if (!servizioId) {
+      const tuttiSlots = getAllFreeSlots(dataInizioDate, dataFineDate, operatoreId);
+      
+      // Filtra per fascia oraria se richiesto
+      let slotsFiltrati = tuttiSlots;
+      if (fascia && tuttiSlots.length > 0) {
+        slotsFiltrati = tuttiSlots.filter(slot => {
+          if (!slot.at_startDateTime || typeof slot.at_startDateTime !== 'string') {
+            return false;
+          }
+          
+          const parts = slot.at_startDateTime.split(' ');
+          if (parts.length < 2) return false;
+          
+          const timeParts = parts[1].split(':');
+          if (timeParts.length < 1) return false;
+          
+          const ora = parseInt(timeParts[0]);
+          if (fascia === 'morning') return ora >= 8 && ora < 12;
+          if (fascia === 'afternoon') return ora >= 12 && ora < 18;
+          if (fascia === 'evening') return ora >= 18 && ora < 21;
+          return true;
+        });
+      }
+      
+      return {
+        success: true,
+        slots: slotsFiltrati,
+        total: slotsFiltrati.length,
+        filters: { 
+          servizioId: 'all', 
+          dataInizio: formattaData(dataInizioDate), 
+          dataFine: formattaData(dataFineDate), 
+          operatoreId 
+        }
+      };
+    }
+    
+    // Se c'è servizioId, usa il metodo originale
     // Raccogli tutti gli slot nel range di date
     const tuttiSlots = [];
     const giorniRange = Math.ceil((dataFineDate - dataInizioDate) / (1000 * 60 * 60 * 24));
@@ -2149,8 +2262,8 @@ function apiGetSlot(params) {
     
     // Filtra per fascia oraria se richiesto
     let slotsFiltrati = tuttiSlots;
-    if (fascia && slots.length > 0) {
-      slotsFiltrati = slots.filter(slot => {
+    if (fascia && tuttiSlots.length > 0) {
+      slotsFiltrati = tuttiSlots.filter(slot => {
         // Verifica che at_startDateTime esista e sia una stringa
         if (!slot.at_startDateTime || typeof slot.at_startDateTime !== 'string') {
           return false;

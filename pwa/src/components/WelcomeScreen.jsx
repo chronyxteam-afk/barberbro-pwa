@@ -112,15 +112,6 @@ export default function WelcomeScreen() {
           </div>
         )}
 
-        {/* CTA Button */}
-        <button
-          onClick={() => setStep('service')}
-          disabled={isLoadingData}
-          className={`btn-primary w-full max-w-sm mx-auto mb-6 text-lg font-semibold shadow-lg shadow-[#007AFF]/25 ${isLoadingData ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          {isLoadingData ? 'Caricamento...' : 'Prenota ora'}
-        </button>
-
         {/* Preferences - Apple Style Pills */}
         <div className="mt-12">
           <p className="text-sm font-medium text-[#86868b] mb-4 uppercase tracking-wide">
