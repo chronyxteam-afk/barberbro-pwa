@@ -236,13 +236,17 @@ export const useStore = create(
       loadSlots: async (filters = {}) => {
         set({ loading: true })
         try {
+          console.log('🔍 loadSlots con filtri:', filters)
           const result = await apiService.getSlots(filters)
+          console.log('📦 Risposta API slot:', result)
+          
           if (result.success && result.slot) {
             console.log('✅ Slot caricati:', result.slot.length)
             set({ slots: result.slot, loading: false })
           } else {
-            console.error('❌ Errore caricamento slot:', result.error)
-            set({ loading: false, error: result.error })
+            console.error('❌ Errore caricamento slot:', result.error || 'Errore sconosciuto')
+            console.error('📋 Risposta completa:', JSON.stringify(result))
+            set({ loading: false, error: result.error || 'Errore caricamento slot' })
           }
         } catch (error) {
           console.error('❌ Errore loadSlots:', error)

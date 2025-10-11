@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useStore } from '../store/useStore'
 
 export default function WelcomeScreen() {
@@ -13,12 +13,15 @@ export default function WelcomeScreen() {
     logout,
     auth
   } = useStore()
+  
+  const [isLoadingData, setIsLoadingData] = useState(true)
 
   // Carica i dati reali dal Google Sheets dopo il login
   useEffect(() => {
     const loadData = async () => {
       try {
         console.log('🔄 Inizio caricamento dati...')
+        setIsLoadingData(true)
         
         if (loadServices) {
           await loadServices()
@@ -33,6 +36,8 @@ export default function WelcomeScreen() {
       } catch (error) {
         console.error('❌ Errore caricamento dati:', error)
         // Non bloccare l'interfaccia anche se caricamento fallisce
+      } finally {
+        setIsLoadingData(false)
       }
     }
     
@@ -79,6 +84,14 @@ export default function WelcomeScreen() {
           {config?.welcome_message || 'Prenota il tuo appuntamento in pochi tap'}
         </p>
 
+        {/* Loading Indicator */}
+        {isLoadingData && (
+          <div className="mb-8 flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-3 border-[#007AFF] border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-sm text-[#86868b]">Caricamento dati...</p>
+          </div>
+        )}
+
         {/* Returning Customer Card */}
         {isReturningCustomer && customer && (
           <div className="card mb-8 animate-scaleIn bg-gradient-to-br from-blue-50 to-white border-[#007AFF]/20">
@@ -97,9 +110,10 @@ export default function WelcomeScreen() {
         {/* CTA Button */}
         <button
           onClick={() => setStep('service')}
-          className="btn-primary w-full max-w-sm mx-auto mb-6 text-lg font-semibold shadow-lg shadow-[#007AFF]/25"
+          disabled={isLoadingData}
+          className={`btn-primary w-full max-w-sm mx-auto mb-6 text-lg font-semibold shadow-lg shadow-[#007AFF]/25 ${isLoadingData ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          Prenota ora
+          {isLoadingData ? 'Caricamento...' : 'Prenota ora'}
         </button>
 
         {/* Preferences - Apple Style Pills */}
