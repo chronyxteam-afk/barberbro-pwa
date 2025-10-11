@@ -2115,8 +2115,6 @@ function apiGetOperatori() {
 function apiGetSlot(params) {
   try {
     const servizioId = params.servizioId;
-    const dataInizio = params.dataInizio || formattaData(new Date());
-    const dataFine = params.dataFine;
     const operatoreId = params.operatoreId || null;
     const fascia = params.fascia; // 'morning', 'afternoon', 'evening'
     
@@ -2124,20 +2122,33 @@ function apiGetSlot(params) {
       throw new Error('servizioId obbligatorio');
     }
     
-    // Calcola dataFine se non specificata
-    let dataFineCalc = dataFine;
-    if (!dataFineCalc) {
-      const config = loadConfigPWACache();
-      const giorni = config.booking_days || 30;
-      const fine = new Date();
-      fine.setDate(fine.getDate() + giorni);
-      dataFineCalc = formattaData(fine);
+    // Parse date di inizio e fine
+    let dataInizioDate = new Date();
+    let dataFineDate = new Date();
+    dataFineDate.setDate(dataFineDate.getDate() + 30); // Default 30 giorni
+    
+    if (params.dataInizio) {
+      dataInizioDate = parseDateTime(params.dataInizio);
+    }
+    if (params.dataFine) {
+      dataFineDate = parseDateTime(params.dataFine);
     }
     
-    const slots = getSlotDisponibili(servizioId, dataInizio, dataFineCalc, operatoreId);
+    // Raccogli tutti gli slot nel range di date
+    const tuttiSlots = [];
+    const giorniRange = Math.ceil((dataFineDate - dataInizioDate) / (1000 * 60 * 60 * 24));
+    
+    for (let i = 0; i <= giorniRange; i++) {
+      const dataCorrente = new Date(dataInizioDate);
+      dataCorrente.setDate(dataCorrente.getDate() + i);
+      
+      // getSlotDisponibili accetta (servizioId, data, operatoreId)
+      const slotsGiorno = getSlotDisponibili(servizioId, dataCorrente, operatoreId);
+      tuttiSlots.push(...slotsGiorno);
+    }
     
     // Filtra per fascia oraria se richiesto
-    let slotsFiltrati = slots;
+    let slotsFiltrati = tuttiSlots;
     if (fascia && slots.length > 0) {
       slotsFiltrati = slots.filter(slot => {
         // Verifica che at_startDateTime esista e sia una stringa
@@ -2161,9 +2172,15 @@ function apiGetSlot(params) {
     
     return {
       success: true,
-      slot: slotsFiltrati,  // Cambiato da 'slots' a 'slot' per consistenza con frontend
+      slots: slotsFiltrati,  // Usa 'slots' (plurale) come da frontend
       total: slotsFiltrati.length,
-      filters: { servizioId, dataInizio, dataFine: dataFineCalc, operatoreId, fascia }
+      filters: { 
+        servizioId, 
+        dataInizio: formattaData(dataInizioDate), 
+        dataFine: formattaData(dataFineDate), 
+        operatoreId, 
+        fascia 
+      }
     };
   } catch (error) {
     return {
