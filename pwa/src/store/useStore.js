@@ -10,12 +10,12 @@ export const useStore = create(
       // Configurazione PWA
       config: {
         // Default config per testing (sarà sostituito da API)
-        shop_name: 'BarberBro Demo',
+        shop_name: 'BarberBro',
         shop_logo_url: '',
         primary_color: '#C19A6B',
         accent_color: '#1F1F1F',
         phone_contact: '+39 333 123 4567',
-        address: 'Via Demo 1, Napoli',
+        address: 'Via Principale 1',
         maps_url: '',
         booking_days: 30,
         min_notice_hours: 2,
@@ -374,66 +374,95 @@ export const useStore = create(
       
       // Crea prenotazione
       createBooking: async (bookingData) => {
-        // MOCK: Simula prenotazione senza backend
-        console.log('📝 MOCK: Prenotazione creata', bookingData)
-        
-        // Salva telefono per returning customer
-        localStorage.setItem('barberbro_customer_phone', bookingData.customerPhone)
-        
-        // Salva customer nello store
-        set({ 
-          customer: {
-            name: bookingData.customerName,
-            phone: bookingData.customerPhone,
-            email: bookingData.customerEmail
-          },
-          loading: false 
-        })
-        
-        return { success: true, message: 'Prenotazione confermata!' }
-        
-        /* Quando hai il backend, usa questo:
         set({ loading: true })
         try {
+          console.log('📝 Invio prenotazione al backend:', bookingData)
           const result = await apiService.createBooking(bookingData)
+          
           if (result.success) {
+            // Salva telefono per returning customer
             localStorage.setItem('barberbro_customer_phone', bookingData.customerPhone)
-            set({ loading: false })
+            
+            // Salva customer nello store
+            set({ 
+              customer: {
+                name: bookingData.customerName,
+                phone: bookingData.customerPhone,
+                email: bookingData.customerEmail
+              },
+              loading: false 
+            })
+            
+            console.log('✅ Prenotazione confermata:', result)
             return result
           } else {
-            throw new Error(result.error)
+            throw new Error(result.error || 'Errore nella prenotazione')
           }
         } catch (error) {
+          console.error('❌ Errore createBooking:', error)
           set({ error: error.message, loading: false })
           throw error
         }
-        */
       },
       
       // Carica prenotazioni cliente
       loadMyBookings: async () => {
-        // MOCK: Simula prenotazioni salvate
-        const mockBookings = [
-          {
-            at_ID: 101,
-            at_startDateTime: '10/10/2025 15:00:00',
-            at_duration: 30,
-            at_price: 25,
-            serviceName: 'Taglio Classico',
-            operatorName: 'Marco'
+        set({ loading: true })
+        try {
+          const customer = get().customer
+          const phone = customer?.phone || localStorage.getItem('barberbro_customer_phone')
+          
+          if (!phone) {
+            console.warn('⚠️ Nessun telefono cliente trovato')
+            set({ myBookings: [], loading: false })
+            return
           }
-        ]
-        set({ myBookings: mockBookings })
-        console.log('📋 MOCK: Prenotazioni caricate:', mockBookings.length)
+          
+          console.log('📋 Caricamento prenotazioni per:', phone)
+          const result = await apiService.getMyBookings(phone)
+          
+          if (result.success) {
+            set({ myBookings: result.bookings || [], loading: false })
+            console.log('✅ Prenotazioni caricate:', result.bookings?.length || 0)
+          } else {
+            throw new Error(result.error || 'Errore nel caricamento prenotazioni')
+          }
+        } catch (error) {
+          console.error('❌ Errore loadMyBookings:', error)
+          set({ error: error.message, myBookings: [], loading: false })
+        }
       },
       
       // Cancella prenotazione
       cancelBooking: async (appointmentId) => {
-        // MOCK: Simula cancellazione
-        console.log('❌ MOCK: Cancellazione prenotazione', appointmentId)
-        set({ 
-          myBookings: get().myBookings.filter(b => b.at_ID !== appointmentId)
-        })
+        set({ loading: true })
+        try {
+          const customer = get().customer
+          const phone = customer?.phone || localStorage.getItem('barberbro_customer_phone')
+          
+          if (!phone) {
+            throw new Error('Telefono cliente non trovato')
+          }
+          
+          console.log('❌ Cancellazione prenotazione:', appointmentId)
+          const result = await apiService.cancelBooking(appointmentId, phone)
+          
+          if (result.success) {
+            // Rimuovi dalla lista locale
+            set({ 
+              myBookings: get().myBookings.filter(b => b.at_ID !== appointmentId),
+              loading: false
+            })
+            console.log('✅ Prenotazione cancellata')
+            return result
+          } else {
+            throw new Error(result.error || 'Errore nella cancellazione')
+          }
+        } catch (error) {
+          console.error('❌ Errore cancelBooking:', error)
+          set({ error: error.message, loading: false })
+          throw error
+        }
       },
       
       // Navigazione
