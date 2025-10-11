@@ -20,10 +20,17 @@ function App() {
     loading, 
     error,
     loadConfig,
-    checkAuth
+    checkAuth,
+    loadServices,
+    loadOperators,
+    loadSlots,
+    services,
+    operators
   } = useStore()
   
   const [showConfigError, setShowConfigError] = useState(false)
+  const [isLoadingInitialData, setIsLoadingInitialData] = useState(false)
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false)
 
   useEffect(() => {
     // 1. Carica configurazione (pubblico, no auth)
@@ -39,6 +46,36 @@ function App() {
     
     return () => clearTimeout(timer)
   }, [])
+
+  // Carica dati iniziali DOPO login
+  useEffect(() => {
+    const loadInitialData = async () => {
+      // Solo se autenticato e dati non ancora caricati
+      if (auth.isAuthenticated && !initialDataLoaded && !isLoadingInitialData) {
+        console.log('🚀 Caricamento dati iniziali dopo login...')
+        setIsLoadingInitialData(true)
+        
+        try {
+          // Carica in parallelo servizi, operatori e TUTTI gli slot
+          await Promise.all([
+            loadServices(),
+            loadOperators(),
+            loadSlots({}) // Senza filtri = TUTTI gli slot liberi
+          ])
+          
+          console.log('✅ Dati iniziali caricati con successo!')
+          setInitialDataLoaded(true)
+        } catch (error) {
+          console.error('❌ Errore caricamento dati iniziali:', error)
+          // Non bloccare, continua comunque
+        } finally {
+          setIsLoadingInitialData(false)
+        }
+      }
+    }
+    
+    loadInitialData()
+  }, [auth.isAuthenticated, initialDataLoaded])
 
   // Forza reload config se manca google_client_id (config cache obsoleta)
   useEffect(() => {
@@ -113,8 +150,11 @@ function App() {
         {/* Se NON autenticato → mostra LoginScreen */}
         {!auth.isAuthenticated ? (
           <LoginScreen />
+        ) : isLoadingInitialData ? (
+          // Se autenticato ma caricamento dati in corso → mostra LoadingScreen
+          <LoadingScreen message="Caricamento dati..." />
         ) : (
-          // Se autenticato → mostra booking flow
+          // Se autenticato E dati caricati → mostra booking flow
           renderStep()
         )}
       </div>

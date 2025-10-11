@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { useStore } from '../store/useStore'
 
 export default function WelcomeScreen() {
@@ -8,47 +7,9 @@ export default function WelcomeScreen() {
     isReturningCustomer,
     setPreferences,
     setStep,
-    loadServices,
-    loadOperators,
-    loadSlots,
     logout,
     auth
   } = useStore()
-  
-  const [isLoadingData, setIsLoadingData] = useState(true)
-
-  // Carica i dati reali dal Google Sheets dopo il login
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        console.log('🔄 Inizio caricamento dati...')
-        setIsLoadingData(true)
-        
-        // Carica servizi, operatori E tutti gli slot liberi
-        if (loadServices) {
-          await loadServices()
-        }
-        if (loadOperators) {
-          await loadOperators()
-        }
-        if (loadSlots) {
-          // Carica TUTTI gli slot liberi (senza filtri)
-          // L'API deve restituire tutti gli slot con at_status = "Libero"
-          await loadSlots({})
-        }
-        
-        console.log('✅ Tutti i dati caricati dall\'API (servizi, operatori, slot)')
-      } catch (error) {
-        console.error('❌ Errore caricamento dati:', error)
-        // Non bloccare l'interfaccia anche se caricamento fallisce
-      } finally {
-        setIsLoadingData(false)
-      }
-    }
-    
-    // Carica dati solo se non sono già presenti
-    loadData()
-  }, []) // Rimuovo le dipendenze per evitare loop infiniti
 
   const handleTimePreference = (timeSlot) => {
     setPreferences({ timeSlot })
@@ -112,18 +73,15 @@ export default function WelcomeScreen() {
           <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
             <button
               onClick={() => handleTimePreference('flexible')}
-              disabled={isLoadingData}
-              className={`card-hover py-6 flex flex-col items-center gap-2 group ${isLoadingData ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className="card-hover py-6 flex flex-col items-center gap-2 group"
             >
               <span className="text-3xl group-hover:scale-110 transition-transform duration-200">🍀</span>
               <span className="text-[15px] font-medium text-[#1d1d1f]">Primo disponibile</span>
-              {isLoadingData && <span className="text-xs text-[#007AFF]">Caricamento...</span>}
             </button>
             
             <button
               onClick={() => handleTimePreference('morning')}
-              disabled={isLoadingData}
-              className={`card-hover py-6 flex flex-col items-center gap-2 group ${isLoadingData ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className="card-hover py-6 flex flex-col items-center gap-2 group"
             >
               <span className="text-3xl group-hover:scale-110 transition-transform duration-200">🌅</span>
               <span className="text-[15px] font-medium text-[#1d1d1f]">Mattina</span>
@@ -132,8 +90,7 @@ export default function WelcomeScreen() {
             
             <button
               onClick={() => handleTimePreference('afternoon')}
-              disabled={isLoadingData}
-              className={`card-hover py-6 flex flex-col items-center gap-2 group ${isLoadingData ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className="card-hover py-6 flex flex-col items-center gap-2 group"
             >
               <span className="text-3xl group-hover:scale-110 transition-transform duration-200">☀️</span>
               <span className="text-[15px] font-medium text-[#1d1d1f]">Pomeriggio</span>
@@ -142,8 +99,7 @@ export default function WelcomeScreen() {
             
             <button
               onClick={() => handleTimePreference('evening')}
-              disabled={isLoadingData}
-              className={`card-hover py-6 flex flex-col items-center gap-2 group ${isLoadingData ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className="card-hover py-6 flex flex-col items-center gap-2 group"
             >
               <span className="text-3xl group-hover:scale-110 transition-transform duration-200">🌆</span>
               <span className="text-[15px] font-medium text-[#1d1d1f]">Sera</span>
