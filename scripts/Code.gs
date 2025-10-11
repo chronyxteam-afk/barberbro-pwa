@@ -1968,7 +1968,7 @@ function doGet(e) {
       
       // Prenotazione (supporto anche GET per evitare CORS preflight)
       case 'prenota':
-        result = apiCreaPrenotazione(e.parameter);
+        result = apiCreaPrenotazione(e.parameter, userData);
         break;
       
       // Cancellazione (supporto anche GET per evitare CORS preflight)
@@ -2016,11 +2016,21 @@ function doPost(e) {
     const data = JSON.parse(e.postData.contents);
     const action = data.action;
     
+    // Verifica token per autenticazione
+    let userData = null;
+    try {
+      const authHeader = data.authorization || e.parameter?.authorization;
+      userData = verificaToken(authHeader);
+    } catch (authError) {
+      // Se fallisce auth, continua senza userData (gestito dalle funzioni API)
+      Logger.log('⚠️ POST senza auth valida:', authError.message);
+    }
+    
     let result = {};
     
     switch(action) {
       case 'prenota':
-        result = apiCreaPrenotazione(data);
+        result = apiCreaPrenotazione(data, userData);
         break;
       
       case 'cancella':
@@ -2421,8 +2431,9 @@ function apiGetPrenotazioni(phone) {
 /**
  * API: Crea nuova prenotazione
  * Data: { slotId, servizioId, operatoreId, customerName, customerPhone, customerEmail (opt) }
+ * userData: Dati utente autenticato dal token (contiene clienteId)
  */
-function apiCreaPrenotazione(data) {
+function apiCreaPrenotazione(data, userData = null) {
   try {
     const { slotId, servizioId, operatoreId, customerName, customerPhone, customerEmail } = data;
     
@@ -2430,8 +2441,24 @@ function apiCreaPrenotazione(data) {
       throw new Error('Campi obbligatori: slotId, servizioId, customerName, customerPhone');
     }
     
-    // Salva o aggiorna cliente nel foglio Clienti
-    const cnId = salvaCliente(customerName, customerPhone, customerEmail || '');
+    // Usa il cliente autenticato se disponibile, altrimenti cerca/crea
+    let cnId;
+    if (userData && userData.clienteId) {
+      // Cliente autenticato via PWA - usa il suo ID
+      cnId = userData.clienteId;
+      Logger.log(`✅ Usa cliente autenticato: ${cnId} (${userData.email})`);
+      
+      // Aggiorna eventualmente telefono se diverso
+      const cliente = trovaClientePerEmail(userData.email);
+      if (cliente && cliente.cn_phone !== customerPhone) {
+        Logger.log(`📝 Aggiorno telefono cliente: ${cliente.cn_phone} → ${customerPhone}`);
+        salvaCliente(customerName, customerPhone, customerEmail || userData.email);
+      }
+    } else {
+      // Cliente da form (no auth) - cerca/crea per telefono
+      cnId = salvaCliente(customerName, customerPhone, customerEmail || '');
+      Logger.log(`📝 Cliente salvato/aggiornato: ${cnId}`);
+    }
     
     const ss = getFoglio();
     const sheet = ss.getSheetByName('AppunTamenti');
