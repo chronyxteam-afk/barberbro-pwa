@@ -7,7 +7,7 @@ import json
 
 # URL API aggiornato
 # URL API Apps Script
-API_URL = "https://script.google.com/macros/s/AKfycbzr68hty6vQnJj9TWoYJzBinewO6O79PejqKZmDmGnT6Q7dYKwm3wOrrNKvij2UYLIzAg/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbzvd1XNZiiHevUuL3AjBQagzzhllZwvkBoCBsoxmLQVaTexiSdXx85CtIDE57KaM9Mf0A/exec"
 
 print("🧪 Test API Apps Script")
 print("=" * 60)
