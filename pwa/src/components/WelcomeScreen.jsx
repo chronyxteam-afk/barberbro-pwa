@@ -10,7 +10,6 @@ export default function WelcomeScreen() {
     setStep,
     loadServices,
     loadOperators,
-    loadSlots,
     logout,
     auth
   } = useStore()
@@ -27,9 +26,8 @@ export default function WelcomeScreen() {
         if (loadOperators) {
           await loadOperators()
         }
-        if (loadSlots) {
-          await loadSlots()
-        }
+        // Gli slot vengono caricati solo dopo la selezione del servizio
+        // Non carichiamo slot all'avvio perché servizioId è obbligatorio
         
         console.log('✅ Dati caricati dall\'API')
       } catch (error) {

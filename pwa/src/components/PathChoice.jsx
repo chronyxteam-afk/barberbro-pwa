@@ -1,11 +1,12 @@
 import { useStore } from '../store/useStore'
 
 export default function PathChoice() {
-  const { selectPath, setStep, loadOperators, loadSlots, prevStep } = useStore()
+  const { selectPath, setStep, loadOperators, loadSlots, prevStep, selectedService } = useStore()
 
   const handleLucky = async () => {
     selectPath('lucky')
-    await loadSlots()
+    // Passa il servizioId selezionato
+    await loadSlots({ servizioId: selectedService.sv_ID })
     setStep('quick-slots')
   }
 

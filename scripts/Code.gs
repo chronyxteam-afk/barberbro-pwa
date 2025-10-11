@@ -2138,9 +2138,20 @@ function apiGetSlot(params) {
     
     // Filtra per fascia oraria se richiesto
     let slotsFiltrati = slots;
-    if (fascia) {
+    if (fascia && slots.length > 0) {
       slotsFiltrati = slots.filter(slot => {
-        const ora = parseInt(slot.at_startDateTime.split(' ')[1].split(':')[0]);
+        // Verifica che at_startDateTime esista e sia una stringa
+        if (!slot.at_startDateTime || typeof slot.at_startDateTime !== 'string') {
+          return false;
+        }
+        
+        const parts = slot.at_startDateTime.split(' ');
+        if (parts.length < 2) return false;
+        
+        const timeParts = parts[1].split(':');
+        if (timeParts.length < 1) return false;
+        
+        const ora = parseInt(timeParts[0]);
         if (fascia === 'morning') return ora >= 8 && ora < 12;
         if (fascia === 'afternoon') return ora >= 12 && ora < 18;
         if (fascia === 'evening') return ora >= 18 && ora < 21;
@@ -2150,7 +2161,7 @@ function apiGetSlot(params) {
     
     return {
       success: true,
-      slots: slotsFiltrati,
+      slot: slotsFiltrati,  // Cambiato da 'slots' a 'slot' per consistenza con frontend
       total: slotsFiltrati.length,
       filters: { servizioId, dataInizio, dataFine: dataFineCalc, operatoreId, fascia }
     };

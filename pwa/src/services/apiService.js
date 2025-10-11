@@ -26,7 +26,18 @@ class ApiService {
       
       // Per GET, passa token come query param invece di header (evita CORS preflight)
       const tokenParam = token ? `&authorization=${encodeURIComponent(token)}` : ''
-      const url = `${this.baseUrl}?endpoint=${endpoint}${tokenParam}`
+      
+      // Aggiungi parametri aggiuntivi dall'options.params
+      let extraParams = ''
+      if (options.params) {
+        for (const [key, value] of Object.entries(options.params)) {
+          if (value !== undefined && value !== null) {
+            extraParams += `&${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+          }
+        }
+      }
+      
+      const url = `${this.baseUrl}?endpoint=${endpoint}${tokenParam}${extraParams}`
       
       const response = await fetch(url, {
         ...options,
