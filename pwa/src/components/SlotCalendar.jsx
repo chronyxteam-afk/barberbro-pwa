@@ -40,6 +40,10 @@ export default function SlotCalendar() {
     groups[dateKey].push(slot)
     return groups
   }, {})
+  
+  // Debug: mostra quanti giorni ci sono
+  const numGiorni = Object.keys(groupedSlots).length
+  console.log(`📅 Slot raggruppati per ${numGiorni} giorni:`, Object.keys(groupedSlots))
 
   return (
     <div className="min-h-screen bg-[#f5f5f7]">
