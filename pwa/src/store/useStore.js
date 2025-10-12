@@ -209,10 +209,11 @@ export const useStore = create(
           const result = await apiService.getServices()
           if (result.success && result.servizi) {
             console.log('✅ Servizi caricati:', result.servizi.length)
-            // Mappa i campi API (id, name) ai campi frontend (sv_ID, sv_name)
+            // Mappa i campi API (id, name, category) ai campi frontend (sv_ID, sv_name, sv_category)
             const mappedServices = result.servizi.map(sv => ({
               sv_ID: sv.id,
               sv_name: sv.name,
+              sv_category: sv.category || 'Altro',
               sv_duration: sv.duration,
               sv_price: sv.price,
               sv_description: sv.description || '',

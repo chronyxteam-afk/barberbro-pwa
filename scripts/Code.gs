@@ -158,9 +158,10 @@ function loadServiziCache() {
       SERVIZI_CACHE[row[0]] = {
         sv_ID: row[0],
         sv_name: row[1],
-        sv_price: row[2],
-        sv_duration: parseInt(row[3]) || 15,
-        sv_info: row[4] || '' // Colonna 4: note/descrizione servizio
+        sv_category: row[2] || '', // Colonna C: categoria (Capelli, Barba)
+        sv_price: row[3] || 0, // Colonna D: prezzo
+        sv_duration: parseInt(row[4]) || 15, // Colonna E: durata
+        sv_info: row[5] || '' // Colonna F: note/descrizione servizio
       };
     }
   }
@@ -2240,6 +2241,7 @@ function apiGetServizi() {
       serviziArray.push({
         id: id,
         name: servizi[id].sv_name,
+        category: servizi[id].sv_category || '',
         duration: servizi[id].sv_duration,
         price: servizi[id].sv_price,
         info: servizi[id].sv_info || '' // Nuovo campo note/descrizione
