@@ -10,7 +10,7 @@ import json
 import requests
 import json
 
-API_URL = "https://script.google.com/macros/s/AKfycbxbYXJCx_BdTMeWLN-6Uq4Rjy14Dgco-ji7qZQVfCMVEZjAGgvKafqK76N9pV4FnhOA9w/exec"
+API_URL = "https://script.google.com/macros/s/AKfycbzyPaV1RrqpjT5V21Oa7214arAW9o9TTncLdvGmKdEG4NK9b_6mbKR78ebOcH8YIP8sBg/exec"
 
 print("🧪 Test API Apps Script")
 print("=" * 60)

@@ -1446,6 +1446,7 @@ function getAllFreeSlots(dataInizio, dataFine, operatoreId = null) {
       cn_ID: cn_ID || '',
       sv_ID: sv_ID || '',
       or_ID: or_ID,
+      op_ID: or_ID, // Alias per il frontend (usa op_ID invece di or_ID)
       at_status: at_status,
       at_notes: at_notes || ''
     });
