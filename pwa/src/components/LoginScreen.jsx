@@ -52,7 +52,12 @@ export default function LoginScreen() {
               className="w-24 h-24 mx-auto rounded-[24px] shadow-lg mb-4"
             />
           ) : (
-            <div className="w-24 h-24 mx-auto rounded-[24px] bg-gradient-to-br from-[#007AFF] to-[#5856D6] flex items-center justify-center mb-4 shadow-lg">
+            <div 
+              className="w-24 h-24 mx-auto rounded-[24px] flex items-center justify-center mb-4 shadow-lg"
+              style={{
+                background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))`
+              }}
+            >
               <span className="text-white text-4xl">💈</span>
             </div>
           )}

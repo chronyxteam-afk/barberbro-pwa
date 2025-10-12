@@ -217,8 +217,13 @@ function loadConfigPWACache() {
     CONFIG_PWA_CACHE = {
       shop_name: 'BarberBro',
       shop_logo_url: '',
-      primary_color: '#C19A6B',
-      accent_color: '#1F1F1F',
+      primary_color: '#007AFF',
+      primary_color_dark: '#0051D5',
+      secondary_color: '#34C759',
+      accent_color: '#C19A6B',
+      background_color: '#F5F5F7',
+      text_color: '#1D1D1F',
+      text_secondary_color: '#86868B',
       phone_contact: '',
       address: '',
       maps_url: '',
@@ -616,10 +621,12 @@ function setupGuidaConfigPWA() {
       // ========== SEZIONE 3: COLORI & BRANDING ==========
       ['=== COLORI & BRANDING ===', '', '', '', ''],
       ['primary_color', 'Colore HEX', 'Colore primario UI: pulsanti, header, link. Formato esadecimale con #. Usa https://htmlcolorcodes.com per scegliere.', '#007AFF', 'SI'],
+      ['primary_color_dark', 'Colore HEX', 'Versione scura del colore primario per hover/gradienti. Consigliato: 20-30% più scuro di primary_color.', '#0051D5', 'NO'],
       ['secondary_color', 'Colore HEX', 'Colore secondario: badge, notifiche, stati attivi. Complementare a primary_color.', '#34C759', 'NO'],
       ['accent_color', 'Colore HEX', 'Colore accento: dettagli, highlight, icone speciali. Tipico: oro/bronzo per barbieri.', '#C19A6B', 'NO'],
       ['background_color', 'Colore HEX', 'Colore sfondo app. Consigliato: grigio molto chiaro (#F5F5F7) o bianco (#FFFFFF).', '#F5F5F7', 'NO'],
       ['text_color', 'Colore HEX', 'Colore testo principale. Consigliato: quasi nero (#1D1D1F) per leggibilità.', '#1D1D1F', 'NO'],
+      ['text_secondary_color', 'Colore HEX', 'Colore testo secondario/sottotitoli. Consigliato: grigio medio (#86868B).', '#86868B', 'NO'],
       ['', '', '', '', ''],
       
       // ========== SEZIONE 4: FUNZIONALITÀ UI ==========

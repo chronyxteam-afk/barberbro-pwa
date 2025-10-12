@@ -42,32 +42,42 @@ export default function WelcomeScreen() {
               className="w-24 h-24 mx-auto rounded-[28px] shadow-lg object-cover"
             />
           ) : (
-            <div className="w-24 h-24 mx-auto bg-gradient-to-br from-[#007AFF] to-[#0051D5] rounded-[28px] shadow-lg flex items-center justify-center text-5xl">
+            <div 
+              className="w-24 h-24 mx-auto rounded-[28px] shadow-lg flex items-center justify-center text-5xl"
+              style={{
+                background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))`
+              }}
+            >
               💈
             </div>
           )}
         </div>
 
         {/* Title */}
-        <h1 className="text-5xl font-semibold text-[#1d1d1f] mb-4 tracking-tight">
+        <h1 className="text-5xl font-semibold mb-4 tracking-tight" style={{ color: 'var(--color-text)' }}>
           {config?.shop_name || 'BarberBro'}
         </h1>
 
         {/* Subtitle */}
-        <p className="text-xl text-[#86868b] mb-12 font-normal">
+        <p className="text-xl mb-12 font-normal" style={{ color: 'var(--color-text-secondary)' }}>
           {config?.welcome_message || 'Prenota il tuo appuntamento in pochi tap'}
         </p>
 
         {/* Returning Customer Card */}
         {isReturningCustomer && customer && (
-          <div className="card mb-8 animate-scaleIn bg-gradient-to-br from-blue-50 to-white border-[#007AFF]/20">
+          <div className="card mb-8 animate-scaleIn bg-gradient-to-br from-blue-50 to-white" style={{ borderColor: 'var(--color-primary)', borderOpacity: 0.2 }}>
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#007AFF] to-[#0051D5] flex items-center justify-center text-2xl shadow-md">
+              <div 
+                className="w-14 h-14 rounded-full flex items-center justify-center text-2xl shadow-md"
+                style={{
+                  background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))`
+                }}
+              >
                 👋
               </div>
               <div className="text-left flex-1">
-                <p className="text-sm text-[#86868b] font-medium">Bentornato</p>
-                <p className="text-xl font-semibold text-[#1d1d1f]">{customer.name}</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>Bentornato</p>
+                <p className="text-xl font-semibold" style={{ color: 'var(--color-text)' }}>{customer.name}</p>
               </div>
             </div>
           </div>

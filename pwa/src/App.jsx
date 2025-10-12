@@ -88,8 +88,21 @@ function App() {
   // Applica colori dinamici da config
   useEffect(() => {
     if (config) {
+      // Helper per convertire HEX a RGB
+      const hexToRgb = (hex) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+        return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '0, 122, 255'
+      }
+      
+      // Imposta tutte le variabili CSS per i colori
       document.documentElement.style.setProperty('--color-primary', config.primary_color || '#007AFF')
+      document.documentElement.style.setProperty('--color-primary-rgb', hexToRgb(config.primary_color || '#007AFF'))
+      document.documentElement.style.setProperty('--color-primary-dark', config.primary_color_dark || '#0051D5')
+      document.documentElement.style.setProperty('--color-secondary', config.secondary_color || '#34C759')
       document.documentElement.style.setProperty('--color-accent', config.accent_color || '#C19A6B')
+      document.documentElement.style.setProperty('--color-background', config.background_color || '#F5F5F7')
+      document.documentElement.style.setProperty('--color-text', config.text_color || '#1D1D1F')
+      document.documentElement.style.setProperty('--color-text-secondary', config.text_secondary_color || '#86868B')
       document.title = `${config.shop_name || 'BarberBro'} - Booking`
     }
   }, [config])

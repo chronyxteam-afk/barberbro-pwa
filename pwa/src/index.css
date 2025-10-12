@@ -3,13 +3,21 @@
 @tailwind utilities;
 
 :root {
-  /* Apple-style colors */
-  --color-primary: #007AFF; /* iOS Blue */
-  --color-accent: #1d1d1f; /* Apple Dark */
-  --color-primary-light: #3395FF;
-  --color-accent-light: #86868b;
+  /* Colori dinamici da ConfigPWA */
+  --color-primary: #007AFF;
+  --color-primary-dark: #0051D5;
+  --color-secondary: #34C759;
+  --color-accent: #C19A6B;
+  --color-background: #F5F5F7;
+  --color-text: #1D1D1F;
+  --color-text-secondary: #86868B;
+  
+  /* Colori di sistema fissi */
   --color-success: #34C759;
   --color-warning: #FF9500;
+  --color-error: #FF3B30;
+  --color-border: #D2D2D7;
+  --color-border-light: #E5E5E5;
 }
 
 body {
@@ -17,7 +25,8 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #f5f5f7;
+  background: var(--color-background);
+  color: var(--color-text);
 }
 
 * {
@@ -45,35 +54,69 @@ body {
 
 @layer components {
   .btn-primary {
-    @apply bg-[#007AFF] text-white font-medium py-3.5 px-8 rounded-[14px] transition-all duration-300 hover:bg-[#0051D5] active:scale-[0.97] shadow-sm text-[17px];
+    background: var(--color-primary);
+    @apply text-white font-medium py-3.5 px-8 rounded-[14px] transition-all duration-300 active:scale-[0.97] shadow-sm text-[17px];
+  }
+  
+  .btn-primary:hover {
+    background: var(--color-primary-dark);
   }
   
   .btn-secondary {
-    @apply bg-white text-[#1d1d1f] font-medium py-3.5 px-8 rounded-[14px] border border-[#d2d2d7] transition-all duration-300 hover:border-[#007AFF] hover:text-[#007AFF] active:scale-[0.97] text-[17px];
+    color: var(--color-text);
+    border-color: var(--color-border);
+    @apply bg-white font-medium py-3.5 px-8 rounded-[14px] border transition-all duration-300 active:scale-[0.97] text-[17px];
+  }
+  
+  .btn-secondary:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
   }
 
   .btn-text {
-    @apply text-[#007AFF] font-medium py-2 px-4 rounded-lg hover:bg-[#007AFF]/5 transition-all duration-200 active:scale-95 text-[17px];
+    color: var(--color-primary);
+    @apply font-medium py-2 px-4 rounded-lg transition-all duration-200 active:scale-95 text-[17px];
+  }
+  
+  .btn-text:hover {
+    background: rgba(var(--color-primary-rgb), 0.05);
   }
   
   .card {
-    @apply bg-white rounded-[20px] shadow-sm p-5 transition-all duration-300 border border-[#e5e5e5];
+    border-color: var(--color-border-light);
+    @apply bg-white rounded-[20px] shadow-sm p-5 transition-all duration-300 border;
   }
   
   .card-hover {
-    @apply card hover:shadow-md hover:-translate-y-0.5 hover:border-[#007AFF]/30 cursor-pointer;
+    @apply card hover:shadow-md hover:-translate-y-0.5 cursor-pointer;
+  }
+  
+  .card-hover:hover {
+    border-color: rgba(var(--color-primary-rgb), 0.3);
   }
 
   .input-apple {
-    @apply w-full px-4 py-3.5 bg-[#f5f5f7] border border-[#d2d2d7] rounded-[12px] font-normal text-[#1d1d1f] placeholder-[#86868b] focus:outline-none focus:bg-white focus:border-[#007AFF] focus:ring-2 focus:ring-[#007AFF]/20 transition-all duration-200 text-[17px];
+    background: var(--color-background);
+    border-color: var(--color-border);
+    color: var(--color-text);
+    @apply w-full px-4 py-3.5 border rounded-[12px] font-normal focus:outline-none focus:bg-white transition-all duration-200 text-[17px];
+  }
+  
+  .input-apple::placeholder {
+    color: var(--color-text-secondary);
+  }
+  
+  .input-apple:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2);
   }
 
   .text-primary {
-    @apply text-[#007AFF];
+    color: var(--color-primary);
   }
 
   .text-secondary {
-    @apply text-[#86868b];
+    color: var(--color-text-secondary);
   }
 }
 
