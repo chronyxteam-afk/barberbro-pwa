@@ -186,14 +186,39 @@ class ApiService {
 
   // Prenotazioni cliente
   async getMyBookings(phone) {
-    const params = new URLSearchParams({
-      action: 'prenotazioni',
-      phone: phone
-    })
-    
     try {
+      // Ottieni token dal persist storage
+      let token = null
+      try {
+        const persistedState = localStorage.getItem('barberbro-storage')
+        if (persistedState) {
+          const parsed = JSON.parse(persistedState)
+          token = parsed.state?.auth?.token
+        }
+      } catch (e) {
+        console.warn('⚠️ Errore lettura token da persist:', e)
+      }
+
+      const params = new URLSearchParams({
+        action: 'prenotazioni',
+        phone: phone
+      })
+      
+      // Aggiungi token come query param
+      if (token) {
+        params.append('authorization', token)
+      }
+      
       const response = await fetch(`${this.baseUrl}?${params}`)
       const data = await response.json()
+      
+      // Gestisci errori auth
+      if (data.statusCode === 401) {
+        console.warn('🔒 Token scaduto, ricarica necessaria')
+        localStorage.removeItem('barberbro-storage')
+        window.location.reload()
+      }
+      
       return data
     } catch (error) {
       console.error('getMyBookings error:', error)
