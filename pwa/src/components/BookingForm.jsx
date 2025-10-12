@@ -55,8 +55,11 @@ export default function BookingForm() {
             <h3 className="font-bold text-gray-900 mb-3">Riepilogo prenotazione</h3>
             <div className="space-y-2 text-sm">
               <div>✂️ {selectedService?.sv_name}</div>
+              <div>👤 {selectedOperator?.op_name || 'Non specificato'}</div>
               <div>⏱️ {selectedService?.sv_duration} min</div>
-              <div>💰 €{selectedService?.sv_price}</div>
+              {selectedService?.sv_price && (
+                <div>💰 €{selectedService?.sv_price}</div>
+              )}
               <div>📅 {selectedSlot?.at_startDateTime}</div>
             </div>
           </div>

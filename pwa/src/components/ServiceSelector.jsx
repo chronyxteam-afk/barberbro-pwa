@@ -42,14 +42,18 @@ export default function ServiceSelector() {
                 <h3 className="font-semibold text-[17px] text-[#1d1d1f] mb-2">
                   {service.sv_name}
                 </h3>
-                <div className="flex items-center gap-4 text-[15px] text-[#86868b]">
+                <div className="flex items-center gap-4 text-[15px] text-[#86868b] mb-2">
                   <span>⏱ {service.sv_duration} min</span>
-                  <span>•</span>
-                  <span className="font-medium text-[#007AFF]">€{service.sv_price}</span>
+                  {service.sv_price && (
+                    <>
+                      <span>•</span>
+                      <span className="font-medium text-[#007AFF]">€{service.sv_price}</span>
+                    </>
+                  )}
                 </div>
-                {service.sv_description && (
-                  <p className="text-[13px] text-[#86868b] mt-2">
-                    {service.sv_description}
+                {service.sv_info && (
+                  <p className="text-[13px] text-[#86868b] mt-2 leading-relaxed">
+                    {service.sv_info}
                   </p>
                 )}
               </div>
