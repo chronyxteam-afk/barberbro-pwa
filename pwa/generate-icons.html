@@ -115,8 +115,27 @@
 
     <div class="controls">
       <div class="control-group">
+        <label>Modalità</label>
+        <select id="mode" onchange="toggleMode()">
+          <option value="emoji">Emoji o Testo</option>
+          <option value="image">Carica immagine</option>
+          <option value="url">URL immagine</option>
+        </select>
+      </div>
+
+      <div class="control-group" id="emojiGroup">
         <label>Emoji o Testo</label>
         <input type="text" id="emoji" value="💈" placeholder="Inserisci emoji o testo" maxlength="2">
+      </div>
+
+      <div class="control-group" id="fileGroup" style="display:none;">
+        <label>Carica immagine dal computer</label>
+        <input type="file" id="imageFile" accept="image/*">
+      </div>
+
+      <div class="control-group" id="urlGroup" style="display:none;">
+        <label>URL immagine (da ConfigPWA)</label>
+        <input type="text" id="imageUrl" placeholder="https://...">
       </div>
 
       <div class="control-group">
@@ -154,11 +173,42 @@
   </div>
 
   <script>
-    function generateIcons() {
-      const emoji = document.getElementById('emoji').value || '💈';
+    function toggleMode() {
+      const mode = document.getElementById('mode').value;
+      document.getElementById('emojiGroup').style.display = mode === 'emoji' ? 'flex' : 'none';
+      document.getElementById('fileGroup').style.display = mode === 'image' ? 'flex' : 'none';
+      document.getElementById('urlGroup').style.display = mode === 'url' ? 'flex' : 'none';
+    }
+
+    async function generateIcons() {
+      const mode = document.getElementById('mode').value;
       const bgColor = document.getElementById('bgColor').value;
       const bgColor2 = document.getElementById('bgColor2').value;
       const gradientType = document.getElementById('gradientType').value;
+      
+      let sourceImage = null;
+      
+      // Carica immagine in base alla modalità
+      if (mode === 'image') {
+        const file = document.getElementById('imageFile').files[0];
+        if (!file) {
+          alert('❌ Seleziona un\'immagine!');
+          return;
+        }
+        sourceImage = await loadImageFromFile(file);
+      } else if (mode === 'url') {
+        const url = document.getElementById('imageUrl').value;
+        if (!url) {
+          alert('❌ Inserisci un URL!');
+          return;
+        }
+        try {
+          sourceImage = await loadImageFromUrl(url);
+        } catch (e) {
+          alert('❌ Errore caricamento immagine da URL: ' + e.message);
+          return;
+        }
+      }
       
       const sizes = [
         { size: 192, name: 'pwa-192x192.png', desc: 'PWA Icon (Android)' },
@@ -193,18 +243,28 @@
         
         ctx.fillRect(0, 0, size, size);
 
-        // Disegna emoji/testo
-        const fontSize = isSmall ? size * 0.5 : size * 0.55;
-        ctx.font = `${fontSize}px Arial, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(emoji, size / 2, size / 2);
+        // Disegna contenuto
+        if (sourceImage) {
+          // Disegna immagine centrata con padding
+          const padding = size * 0.15;
+          const imageSize = size - (padding * 2);
+          ctx.drawImage(sourceImage, padding, padding, imageSize, imageSize);
+        } else {
+          // Disegna emoji/testo
+          const emoji = document.getElementById('emoji').value || '💈';
+          const fontSize = isSmall ? size * 0.5 : size * 0.55;
+          ctx.font = `${fontSize}px Arial, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(emoji, size / 2, size / 2);
+        }
 
         // Anteprima
         const item = document.createElement('div');
         item.className = 'preview-item';
         
         const clonedCanvas = canvas.cloneNode(true);
+        clonedCanvas.getContext('2d').drawImage(canvas, 0, 0);
         clonedCanvas.style.maxWidth = '150px';
         
         const link = document.createElement('a');
@@ -227,6 +287,30 @@
       preview.parentNode.insertBefore(success, preview);
       
       setTimeout(() => success.remove(), 5000);
+    }
+
+    function loadImageFromFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function loadImageFromUrl(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Impossibile caricare immagine'));
+        img.src = url;
+      });
     }
 
     // Genera al caricamento
