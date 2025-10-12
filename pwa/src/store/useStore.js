@@ -447,17 +447,21 @@ export const useStore = create(
       loadMyBookings: async () => {
         set({ loading: true })
         try {
-          const customer = get().customer
-          const phone = customer?.phone || localStorage.getItem('barberbro_customer_phone')
+          const state = get()
+          const customer = state.customer
+          const auth = state.auth
           
-          if (!phone) {
-            console.warn('⚠️ Nessun telefono cliente trovato')
+          // Usa email dall'auth (più affidabile) o telefono come fallback
+          const identifier = auth?.user?.email || customer?.phone || localStorage.getItem('barberbro_customer_phone')
+          
+          if (!identifier) {
+            console.warn('⚠️ Nessun identificatore cliente trovato (email o telefono)')
             set({ myBookings: [], loading: false })
             return
           }
           
-          console.log('📋 Caricamento prenotazioni per:', phone)
-          const result = await apiService.getMyBookings(phone)
+          console.log('📋 Caricamento prenotazioni per:', identifier)
+          const result = await apiService.getMyBookings(identifier)
           
           if (result.success) {
             set({ myBookings: result.bookings || [], loading: false })

@@ -2443,21 +2443,26 @@ function apiGetSlot(params) {
 /**
  * API: Restituisce prenotazioni cliente per telefono
  */
-function apiGetPrenotazioni(phone) {
+function apiGetPrenotazioni(emailOrPhone) {
   try {
-    if (!phone) {
-      throw new Error('Telefono obbligatorio');
+    if (!emailOrPhone) {
+      throw new Error('Email o telefono obbligatorio');
     }
     
-    // Trova cliente per telefono
-    const cliente = trovaClientePerTelefono(phone);
+    // Trova cliente per email (preferito) o telefono (fallback)
+    let cliente = null;
+    if (emailOrPhone.includes('@')) {
+      cliente = trovaClientePerEmail(emailOrPhone);
+    } else {
+      cliente = trovaClientePerTelefono(emailOrPhone);
+    }
     
     if (!cliente) {
       return {
         success: true,
         prenotazioni: [],
         total: 0,
-        message: 'Nessun cliente trovato con questo telefono'
+        message: 'Nessun cliente trovato'
       };
     }
     
