@@ -1157,6 +1157,8 @@ function archiviaAppuntamentiVecchi(giorniStorico = 1) {
   const righeDaMantenere = [sheetAppuntamenti.getRange(1, 1, 1, ultimaColonna).getValues()[0]];
   
   let archiviati = 0;
+  let completatiTrovati = 0;
+  let vecchiTrovati = 0;
   
   for (let i = 0; i < appuntamentiData.length; i++) {
     const row = appuntamentiData[i];
@@ -1194,7 +1196,10 @@ function archiviaAppuntamentiVecchi(giorniStorico = 1) {
     }
   }
   
-  if (archiviati === 0) return 0;
+  if (archiviati === 0) {
+    Logger.log(`ℹ️ Nessun appuntamento da archiviare. Completati trovati: ${completatiTrovati}, Vecchi: ${vecchiTrovati}`);
+    return 0;
+  }
   
   // Scrivi nello Storico
   const ultimaRigaStorico = sheetStorico.getLastRow();
@@ -1204,6 +1209,7 @@ function archiviaAppuntamentiVecchi(giorniStorico = 1) {
   sheetAppuntamenti.clear();
   sheetAppuntamenti.getRange(1, 1, righeDaMantenere.length, righeDaMantenere[0].length).setValues(righeDaMantenere);
   
+  Logger.log(`✅ Archiviati ${archiviati} appuntamenti su Storico (Completati: ${completatiTrovati}, Vecchi: ${vecchiTrovati})`);
   return archiviati;
 }
 
@@ -1741,6 +1747,45 @@ function installaTriggerMenu() {
   
   // Carica menu immediatamente
   onOpen();
+}
+
+/**
+ * Installa trigger automatico per archiviazione giornaliera
+ * ESEGUI QUESTA FUNZIONE UNA VOLTA dal menu Run (tasto Play)
+ * Archivia automaticamente ogni notte alle 02:00
+ */
+function installaTriggerArchiviazione() {
+  // Rimuovi trigger esistenti per evitare duplicati
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(trigger => {
+    if (trigger.getHandlerFunction() === 'archiviazioneAutomatica') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+  
+  // Crea trigger giornaliero alle 02:00
+  ScriptApp.newTrigger('archiviazioneAutomatica')
+    .timeBased()
+    .atHour(2)
+    .everyDays(1)
+    .create();
+  
+  SpreadsheetApp.getUi().alert('✅ Trigger archiviazione installato!\n\nGli appuntamenti completati/cancellati verranno archiviati automaticamente ogni notte alle 02:00.\n\nPuoi anche usare il menu "📦 Archivia Appuntamenti Vecchi" per archiviare manualmente.');
+  
+  Logger.log('✅ Trigger archiviazione giornaliera installato (ore 02:00)');
+}
+
+/**
+ * Funzione chiamata dal trigger automatico
+ */
+function archiviazioneAutomatica() {
+  Logger.log('🕒 Avvio archiviazione automatica...');
+  try {
+    const archiviati = archiviaAppuntamentiVecchi(1); // Archivia appuntamenti di ieri
+    Logger.log(`✅ Archiviazione automatica completata: ${archiviati} appuntamenti archiviati`);
+  } catch (error) {
+    Logger.log(`❌ Errore archiviazione automatica: ${error.message}`);
+  }
 }
 
 // ============================================================================
