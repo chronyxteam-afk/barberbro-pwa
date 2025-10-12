@@ -159,7 +159,8 @@ function loadServiziCache() {
         sv_ID: row[0],
         sv_name: row[1],
         sv_price: row[2],
-        sv_duration: parseInt(row[3]) || 15
+        sv_duration: parseInt(row[3]) || 15,
+        sv_info: row[4] || '' // Colonna 4: note/descrizione servizio
       };
     }
   }
@@ -194,7 +195,8 @@ function loadOperatoriCache() {
         or_workStart: row[5] || config['negozio_apertura'],
         or_workEnd: row[6] || config['negozio_chiusura'],
         or_breakStart: row[7] || '',
-        or_breakEnd: row[8] || ''
+        or_breakEnd: row[8] || '',
+        or_image: row[10] || '' // Colonna 10: link immagine operatore
       });
     }
   }
@@ -2180,7 +2182,8 @@ function apiGetServizi() {
         id: id,
         name: servizi[id].sv_name,
         duration: servizi[id].sv_duration,
-        price: servizi[id].sv_price
+        price: servizi[id].sv_price,
+        info: servizi[id].sv_info || '' // Nuovo campo note/descrizione
       });
     }
     
@@ -2208,7 +2211,8 @@ function apiGetOperatori() {
       workStart: op.or_workStart,
       workEnd: op.or_workEnd,
       breakStart: op.or_breakStart,
-      breakEnd: op.or_breakEnd
+      breakEnd: op.or_breakEnd,
+      image: op.or_image || '' // Nuovo campo immagine operatore
     }));
     
     return {

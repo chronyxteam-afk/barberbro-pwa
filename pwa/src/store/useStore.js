@@ -210,7 +210,8 @@ export const useStore = create(
               sv_name: sv.name,
               sv_duration: sv.duration,
               sv_price: sv.price,
-              sv_description: sv.description || ''
+              sv_description: sv.description || '',
+              sv_info: sv.info || '' // Nuovo campo note/descrizione
             }))
             set({ services: mappedServices, loading: false })
           } else {
@@ -237,7 +238,8 @@ export const useStore = create(
               op_workStart: op.workStart,
               op_workEnd: op.workEnd,
               op_breakStart: op.breakStart,
-              op_breakEnd: op.breakEnd
+              op_breakEnd: op.breakEnd,
+              op_image: op.image || '' // Nuovo campo immagine operatore
             }))
             set({ operators: mappedOperators, loading: false })
           } else {
