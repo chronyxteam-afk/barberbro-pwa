@@ -70,6 +70,33 @@ function formattaData(data) {
 }
 
 /**
+ * Parse string formato "dd/MM/yyyy HH:mm:ss" in Date object
+ */
+function parseDataOra(dataStr) {
+  if (!dataStr) return new Date();
+  if (dataStr instanceof Date) return dataStr;
+  
+  try {
+    // Formato atteso: "08/10/2025 15:30:00"
+    const [datePart, timePart] = dataStr.split(' ');
+    const [giorno, mese, anno] = datePart.split('/');
+    const [ore, minuti, secondi] = timePart.split(':');
+    
+    return new Date(
+      parseInt(anno),
+      parseInt(mese) - 1,  // Mesi sono 0-indexed in JS
+      parseInt(giorno),
+      parseInt(ore),
+      parseInt(minuti),
+      parseInt(secondi || 0)
+    );
+  } catch (e) {
+    Logger.log('⚠️ Errore parsing data: ' + dataStr + ' - ' + e.message);
+    return new Date();
+  }
+}
+
+/**
  * Invalida cache (chiamare dopo modifiche)
  */
 function invalidateCache() {
