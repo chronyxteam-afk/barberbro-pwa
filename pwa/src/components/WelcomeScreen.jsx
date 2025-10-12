@@ -35,9 +35,17 @@ export default function WelcomeScreen() {
       <div className="max-w-2xl mx-auto px-6 pt-16 pb-12 text-center animate-fadeIn">
         {/* Logo/Icon */}
         <div className="mb-8">
-          <div className="w-24 h-24 mx-auto bg-gradient-to-br from-[#007AFF] to-[#0051D5] rounded-[28px] shadow-lg flex items-center justify-center text-5xl">
-            💈
-          </div>
+          {config?.shop_logo_url ? (
+            <img 
+              src={config.shop_logo_url} 
+              alt={config.shop_name}
+              className="w-24 h-24 mx-auto rounded-[28px] shadow-lg object-cover"
+            />
+          ) : (
+            <div className="w-24 h-24 mx-auto bg-gradient-to-br from-[#007AFF] to-[#0051D5] rounded-[28px] shadow-lg flex items-center justify-center text-5xl">
+              💈
+            </div>
+          )}
         </div>
 
         {/* Title */}
