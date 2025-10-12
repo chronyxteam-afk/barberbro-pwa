@@ -31,6 +31,8 @@ export default function MyBookings() {
     if (hasIdentifier) {
       console.log('📋 Caricamento prenotazioni con identificatore:', hasIdentifier)
       console.log('📋 Tipo identificatore:', hasIdentifier.includes('@') ? 'EMAIL' : 'PHONE')
+      console.log('📋 Customer completo:', customer)
+      console.log('📋 Auth user completo:', auth?.user)
       loadMyBookings()
     } else {
       console.warn('⚠️ Nessun identificatore trovato per caricare prenotazioni')

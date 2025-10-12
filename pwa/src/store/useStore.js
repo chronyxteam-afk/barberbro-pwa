@@ -456,8 +456,8 @@ export const useStore = create(
           const customer = state.customer
           const auth = state.auth
           
-          // Usa email dall'auth (più affidabile) o telefono come fallback
-          const identifier = auth?.user?.email || customer?.phone || localStorage.getItem('barberbro_customer_phone')
+          // STESSA LOGICA DI MyBookings: customer.phone || customer.email || auth.user.email
+          const identifier = customer?.phone || customer?.email || auth?.user?.email
           
           if (!identifier) {
             console.warn('⚠️ Nessun identificatore cliente trovato (email o telefono)')
@@ -466,11 +466,15 @@ export const useStore = create(
           }
           
           console.log('📋 Caricamento prenotazioni per:', identifier)
+          console.log('📋 Tipo identificatore:', identifier.includes('@') ? 'EMAIL' : 'PHONE')
           const result = await apiService.getMyBookings(identifier)
           
           if (result.success) {
-            set({ myBookings: result.bookings || [], loading: false })
-            console.log('✅ Prenotazioni caricate:', result.bookings?.length || 0)
+            // L'API restituisce 'prenotazioni', non 'bookings'
+            const prenotazioni = result.prenotazioni || result.bookings || []
+            set({ myBookings: prenotazioni, loading: false })
+            console.log('✅ Prenotazioni caricate:', prenotazioni.length)
+            console.log('📋 Dettaglio prenotazioni:', prenotazioni)
           } else {
             throw new Error(result.error || 'Errore nel caricamento prenotazioni')
           }
