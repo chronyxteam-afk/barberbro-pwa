@@ -297,6 +297,7 @@ function loadClientiCache() {
   const sheet = ss.getSheetByName('Clienti');
   
   if (!sheet) {
+    Logger.log('❌ Foglio Clienti non trovato!');
     CLIENTI_CACHE = {};
     return CLIENTI_CACHE;
   }
@@ -304,12 +305,16 @@ function loadClientiCache() {
   const data = sheet.getDataRange().getValues();
   CLIENTI_CACHE = {};
   
+  // Debug: stampa header
+  Logger.log('📋 Header Clienti: ' + data[0].join(' | '));
+  Logger.log('📊 Righe totali Clienti: ' + data.length);
+  
   // Struttura foglio Clienti:
   // A=cn_ID, B=cn_fullname, C=cn_sex, D=cn_phone, E=cn_email, F=cn_address, G=cn_birthday, ...L=cn_enablePWA
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
     if (row[0]) {
-      CLIENTI_CACHE[row[0]] = {
+      const cliente = {
         cn_ID: row[0],           // Colonna A
         cn_name: row[1] || '',   // Colonna B (cn_fullname)
         cn_sex: row[2] || '',    // Colonna C
@@ -321,8 +326,22 @@ function loadClientiCache() {
         cn_lastLogin: row[12] || null, // Colonna M
         cn_totalBookings: parseInt(row[13]) || 0 // Colonna N
       };
+      
+      CLIENTI_CACHE[row[0]] = cliente;
+      
+      // Debug prima riga
+      if (i === 1) {
+        Logger.log('🔍 Prima riga cliente:');
+        Logger.log('   ID: ' + cliente.cn_ID);
+        Logger.log('   Name: ' + cliente.cn_name);
+        Logger.log('   Phone: ' + cliente.cn_phone);
+        Logger.log('   Email: ' + cliente.cn_email);
+        Logger.log('   PWA: ' + (cliente.cn_enablePWA ? 'SI' : 'NO'));
+      }
     }
   }
+  
+  Logger.log('✅ Clienti caricati in cache: ' + Object.keys(CLIENTI_CACHE).length);
   
   return CLIENTI_CACHE;
 }
@@ -403,16 +422,33 @@ function trovaClientePerTelefono(telefono) {
  * Trova cliente per email (per OAuth login)
  */
 function trovaClientePerEmail(email) {
-  if (!email) return null;
+  Logger.log('🔍 trovaClientePerEmail - Cerco email: ' + email);
+  
+  if (!email) {
+    Logger.log('❌ Email vuota!');
+    return null;
+  }
   
   const clienti = loadClientiCache();
+  Logger.log('📊 Clienti in cache: ' + Object.keys(clienti).length);
+  
+  // Debug: stampa tutti gli email in cache
+  let emailsInCache = [];
+  for (const id in clienti) {
+    if (clienti[id].cn_email) {
+      emailsInCache.push(clienti[id].cn_email);
+    }
+  }
+  Logger.log('📧 Email in cache: ' + emailsInCache.join(', '));
   
   for (const id in clienti) {
     if (clienti[id].cn_email && clienti[id].cn_email.toLowerCase() === email.toLowerCase()) {
+      Logger.log('✅ Cliente trovato: ' + id + ' (' + clienti[id].cn_name + ')');
       return clienti[id];
     }
   }
   
+  Logger.log('❌ Nessun cliente trovato con email: ' + email);
   return null;
 }
 
@@ -2478,16 +2514,26 @@ function apiGetPrenotazioni(emailOrPhone) {
     const servizi = loadServiziCache();
     const operatori = loadOperatoriCache();
     
+    Logger.log('🔍 DEBUG - Cliente trovato: ' + cliente.cn_ID + ' (' + cliente.cn_name + ')');
+    Logger.log('🔍 DEBUG - Righe totali AppunTamenti: ' + data.length);
+    
     // Colonne: at_ID | at_startDateTime | cn_ID | sv_ID | or_ID | at_status | at_notes
+    let righeCliente = 0;
+    let righeStatus = 0;
+    
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
       const cnId = row[2];
       
       // Cerca prenotazioni del cliente
       if (cnId === cliente.cn_ID) {
+        righeCliente++;
         const status = row[5];
+        Logger.log('🔍 DEBUG - Riga ' + i + ' trovata per cliente: status=' + status);
+        
         // Solo prenotazioni attive e future
         if (status === 'Prenotato' || status === 'Confermato') {
+          righeStatus++;
           const svId = row[3];
           const orId = row[4];
           
@@ -2504,6 +2550,10 @@ function apiGetPrenotazioni(emailOrPhone) {
         }
       }
     }
+    
+    Logger.log('🔍 DEBUG - Righe con cn_ID=' + cliente.cn_ID + ': ' + righeCliente);
+    Logger.log('🔍 DEBUG - Righe con status valido: ' + righeStatus);
+    Logger.log('🔍 DEBUG - Prenotazioni finali: ' + prenotazioni.length);
     
     // Ordina per data (più vicine prima)
     prenotazioni.sort((a, b) => {
