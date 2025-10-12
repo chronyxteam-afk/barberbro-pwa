@@ -1146,11 +1146,18 @@ function archiviaAppuntamentiVecchi(giorniStorico = 1) {
   // Se oggi è 8 ottobre, archivia < 8 ottobre 00:00 (tutto il 7 incluso)
   const dataLimite = new Date(oggi);
   
+  Logger.log(`📅 Data limite archiviazione: ${formatDateTime(dataLimite)} (appuntamenti prima di questa data)`);
+  
   // Leggi appuntamenti
   const ultimaRiga = sheetAppuntamenti.getLastRow();
   const ultimaColonna = sheetAppuntamenti.getLastColumn();
   
-  if (ultimaRiga < 2) return 0;
+  if (ultimaRiga < 2) {
+    Logger.log('ℹ️ Nessun appuntamento presente in AppunTamenti');
+    return 0;
+  }
+  
+  Logger.log(`📊 Analisi ${ultimaRiga - 1} appuntamenti...`);
   
   const appuntamentiData = sheetAppuntamenti.getRange(2, 1, ultimaRiga - 1, ultimaColonna).getValues();
   const righeStorico = [];
