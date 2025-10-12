@@ -3,7 +3,7 @@ import { format, parseISO } from 'date-fns'
 import { it } from 'date-fns/locale'
 
 export default function SlotCalendar() {
-  const { slots, selectSlot, setStep, prevStep } = useStore()
+  const { slots, operators, selectSlot, setStep, prevStep } = useStore()
 
   const handleSelect = (slot) => {
     selectSlot(slot)
@@ -29,6 +29,12 @@ export default function SlotCalendar() {
     } catch (e) {
       return dateTimeStr.split(' ')[0]
     }
+  }
+
+  // Trova nome operatore dato op_ID
+  const getOperatorName = (opId) => {
+    const operator = operators.find(op => op.op_ID === opId)
+    return operator?.op_name || ''
   }
 
   // Raggruppa slot per data
@@ -79,11 +85,16 @@ export default function SlotCalendar() {
                 <button
                   key={slot.at_ID}
                   onClick={() => handleSelect(slot)}
-                  className="card-hover p-4 text-center min-h-[60px] flex items-center justify-center"
+                  className="card-hover p-4 text-center min-h-[60px] flex flex-col items-center justify-center"
                 >
                   <div className="font-semibold text-[17px] text-[#007AFF]">
                     {formatTime(slot.at_startDateTime)}
                   </div>
+                  {slot.op_ID && getOperatorName(slot.op_ID) && (
+                    <div className="text-[11px] text-[#86868b] mt-1 truncate w-full">
+                      {getOperatorName(slot.op_ID)}
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
