@@ -103,6 +103,14 @@ function App() {
       document.documentElement.style.setProperty('--color-background', config.background_color || '#F5F5F7')
       document.documentElement.style.setProperty('--color-text', config.text_color || '#1D1D1F')
       document.documentElement.style.setProperty('--color-text-secondary', config.text_secondary_color || '#86868B')
+      
+      // Aggiorna theme-color per status bar mobile
+      const themeColor = config.pwa_theme_color || config.primary_color || '#007AFF'
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', themeColor)
+      }
+      
       document.title = `${config.shop_name || 'BarberBro'} - Booking`
     }
   }, [config])
