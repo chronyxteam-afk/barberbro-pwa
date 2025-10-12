@@ -108,10 +108,15 @@ export const useStore = create(
             customer: {
               name: result.user.name,
               email: result.user.email,
-              phone: result.user.phone
+              phone: result.user.phone || null // Gestisci caso phone mancante
             },
             loading: false
           })
+          
+          // Se il customer ha un telefono, salvalo per future sessioni
+          if (result.user.phone) {
+            localStorage.setItem('barberbro_customer_phone', result.user.phone)
+          }
           
           console.log('✅ Login riuscito:', result.user.name)
           

@@ -7,6 +7,7 @@ export default function MyBookings() {
   const { 
     config,
     customer,
+    auth,
     myBookings, 
     loading, 
     error,
@@ -16,10 +17,24 @@ export default function MyBookings() {
   } = useStore()
 
   useEffect(() => {
-    if (customer?.phone) {
+    // Debug: mostra stato customer e auth
+    console.log('🔍 MyBookings - Stato attuale:', {
+      customer: customer,
+      authUser: auth?.user,
+      hasPhone: !!customer?.phone,
+      hasEmail: !!customer?.email,
+      hasAuthEmail: !!auth?.user?.email
+    })
+    
+    // Carica prenotazioni se abbiamo un identificatore (email o telefono)
+    const hasIdentifier = customer?.phone || customer?.email || auth?.user?.email
+    if (hasIdentifier) {
+      console.log('📋 Caricamento prenotazioni con identificatore:', hasIdentifier)
       loadMyBookings()
+    } else {
+      console.warn('⚠️ Nessun identificatore trovato per caricare prenotazioni')
     }
-  }, [customer, loadMyBookings])
+  }, [customer, loadMyBookings, auth?.user?.email])
 
   const handleCancel = async (bookingId) => {
     if (window.confirm('Sei sicuro di voler cancellare questa prenotazione?')) {
