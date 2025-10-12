@@ -83,8 +83,8 @@ export default function MyBookings() {
     )
   }
 
-  const upcomingBookings = myBookings.filter(b => isUpcoming(b.at_startDateTime))
-  const pastBookings = myBookings.filter(b => !isUpcoming(b.at_startDateTime))
+  const upcomingBookings = myBookings.filter(b => isUpcoming(b.at_startDateTime || b.dateTime))
+  const pastBookings = myBookings.filter(b => !isUpcoming(b.at_startDateTime || b.dateTime))
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -144,18 +144,18 @@ export default function MyBookings() {
                           <p className="text-sm text-gray-600">con {booking.operatorName}</p>
                         </div>
                         <span className="text-lg font-bold text-primary">
-                          €{booking.at_price}
+                          €{booking.at_price || 'N/A'}
                         </span>
                       </div>
                       
                       <div className="flex items-center gap-2 text-sm text-gray-700 mb-3">
                         <span>📅</span>
-                        <span>{formatDateTime(booking.at_startDateTime)}</span>
+                        <span>{formatDateTime(booking.at_startDateTime || booking.dateTime)}</span>
                       </div>
 
                       <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
                         <span>⏱️</span>
-                        <span>{booking.at_duration} minuti</span>
+                        <span>{booking.at_duration || 'N/A'} minuti</span>
                       </div>
 
                       <button
@@ -185,13 +185,13 @@ export default function MyBookings() {
                           <p className="text-sm text-gray-600">con {booking.operatorName}</p>
                         </div>
                         <span className="text-sm font-bold text-gray-600">
-                          €{booking.at_price}
+                          €{booking.at_price || 'N/A'}
                         </span>
                       </div>
                       
                       <div className="flex items-center gap-2 text-sm text-gray-700">
                         <span>📅</span>
-                        <span>{formatDateTime(booking.at_startDateTime)}</span>
+                        <span>{formatDateTime(booking.at_startDateTime || booking.dateTime)}</span>
                       </div>
                     </div>
                   ))}
