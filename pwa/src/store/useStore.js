@@ -525,7 +525,20 @@ export const useStore = create(
       // Selezioni
       selectService: (service) => set({ selectedService: service }),
       selectOperator: (operator) => set({ selectedOperator: operator }),
-      selectSlot: (slot) => set({ selectedSlot: slot }),
+      selectSlot: (slot) => {
+        const state = get()
+        set({ selectedSlot: slot })
+        
+        // Se l'utente ha scelto "Mi sento fortunato" (op_ID === 'all'),
+        // quando seleziona uno slot, trova e imposta l'operatore reale di quello slot
+        if (state.selectedOperator?.op_ID === 'all' && slot.op_ID) {
+          const realOperator = state.operators.find(op => op.op_ID === slot.op_ID)
+          if (realOperator) {
+            console.log(`🍀 Mi sento fortunato → Operatore assegnato: ${realOperator.op_name}`)
+            set({ selectedOperator: realOperator })
+          }
+        }
+      },
       selectPath: (path) => set({ selectedPath: path }),
       
       // Preferenze
