@@ -185,7 +185,7 @@ class ApiService {
   }
 
   // Prenotazioni cliente
-  async getMyBookings(phone) {
+  async getMyBookings(identifier) {
     try {
       // Ottieni token dal persist storage
       let token = null
@@ -199,10 +199,17 @@ class ApiService {
         console.warn('⚠️ Errore lettura token da persist:', e)
       }
 
+      // Determina se identifier è email o telefono
+      const isEmail = identifier.includes('@')
       const params = new URLSearchParams({
-        action: 'prenotazioni',
-        phone: phone
+        action: 'prenotazioni'
       })
+      
+      if (isEmail) {
+        params.append('email', identifier)
+      } else {
+        params.append('phone', identifier)
+      }
       
       // Aggiungi token come query param
       if (token) {
