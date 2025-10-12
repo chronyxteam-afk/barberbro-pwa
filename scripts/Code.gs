@@ -518,6 +518,7 @@ function setupConfigPWA() {
       ['accent_color', '#C19A6B', 'Colore accento (es: #C19A6B oro barbiere)'],
       ['background_color', '#F5F5F7', 'Colore sfondo app (es: #F5F5F7 grigio chiaro)'],
       ['text_color', '#1D1D1F', 'Colore testo principale (es: #1D1D1F quasi nero)'],
+      ['pwa_theme_color', '#007AFF', 'Colore status bar mobile (se vuoto usa primary_color)'],
       ['', '', ''],
       
       // ========== SEZIONE 4: FUNZIONALITÀ UI ==========
