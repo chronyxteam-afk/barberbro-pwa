@@ -50,7 +50,7 @@ ENV/
 
 # Node.js / PWA
 pwa/node_modules/
-pwa/dist/
+# pwa/dist/ ← Commentato per permettere deploy su GitHub Pages
 pwa/build/
 pwa/.vite/
 node_modules/
