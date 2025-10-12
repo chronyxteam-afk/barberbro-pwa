@@ -160,8 +160,12 @@ function loadServiziCache() {
         sv_name: row[1],
         sv_category: row[2] || '', // Colonna C: categoria (Capelli, Barba)
         sv_price: row[3] || 0, // Colonna D: prezzo
-        sv_duration: parseInt(row[4]) || 15, // Colonna E: durata
-        sv_info: row[5] || '' // Colonna F: note/descrizione servizio
+        sv_duration: parseInt(row[4]) || 15, // Colonna E: durata in minuti
+        sv_bufferBefore: parseFloat(row[5]) || 0, // Colonna F: buffer prima (minuti)
+        sv_bufferAfter: parseFloat(row[6]) || 0, // Colonna G: buffer dopo (minuti)
+        sv_active: row[7] !== false && row[7] !== 'FALSE', // Colonna H: attivo
+        sv_color: row[8] || '', // Colonna I: colore
+        sv_info: row[9] || '' // Colonna J: descrizione servizio
       };
     }
   }
