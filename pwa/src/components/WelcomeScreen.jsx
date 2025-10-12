@@ -88,41 +88,97 @@ export default function WelcomeScreen() {
           <p className="text-sm font-medium text-[#86868b] mb-4 uppercase tracking-wide">
             Preferenza orario
           </p>
-          <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
+          <div className="space-y-3 max-w-lg mx-auto">
+            {/* Primo disponibile - Full width */}
             <button
               onClick={() => handleTimePreference('flexible')}
-              className="card-hover py-6 flex flex-col items-center gap-2 group"
+              className="card-hover w-full p-6 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-accent)] text-white"
             >
-              <span className="text-3xl group-hover:scale-110 transition-transform duration-200">🍀</span>
-              <span className="text-[15px] font-medium text-[#1d1d1f]">Primo disponibile</span>
+              <div className="flex items-center justify-between">
+                <div className="text-left">
+                  <h3 className="text-[20px] font-bold mb-1">
+                    🍀 Primo disponibile
+                  </h3>
+                  <p className="text-[13px] opacity-90">
+                    Mostrami tutti gli slot
+                  </p>
+                </div>
+                <div className="text-3xl">✨</div>
+              </div>
             </button>
-            
-            <button
-              onClick={() => handleTimePreference('morning')}
-              className="card-hover py-6 flex flex-col items-center gap-2 group"
-            >
-              <span className="text-3xl group-hover:scale-110 transition-transform duration-200">🌅</span>
-              <span className="text-[15px] font-medium text-[#1d1d1f]">Mattina</span>
-              <span className="text-xs text-[#86868b]">8:00 - 12:00</span>
-            </button>
-            
-            <button
-              onClick={() => handleTimePreference('afternoon')}
-              className="card-hover py-6 flex flex-col items-center gap-2 group"
-            >
-              <span className="text-3xl group-hover:scale-110 transition-transform duration-200">☀️</span>
-              <span className="text-[15px] font-medium text-[#1d1d1f]">Pomeriggio</span>
-              <span className="text-xs text-[#86868b]">14:00 - 18:00</span>
-            </button>
-            
-            <button
-              onClick={() => handleTimePreference('evening')}
-              className="card-hover py-6 flex flex-col items-center gap-2 group"
-            >
-              <span className="text-3xl group-hover:scale-110 transition-transform duration-200">🌆</span>
-              <span className="text-[15px] font-medium text-[#1d1d1f]">Sera</span>
-              <span className="text-xs text-[#86868b]">18:00 - 20:00</span>
-            </button>
+
+            {/* Grid 2x2 per le 3 fasce */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => handleTimePreference('morning')}
+                className="card-hover p-5 flex flex-col items-center gap-2 group"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  viewBox="0 0 64 64" 
+                  className="w-12 h-12 text-[var(--color-primary)]"
+                  stroke="currentColor" 
+                  fill="none" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  aria-label="Mattina"
+                >
+                  <path d="M12 44h40"/>
+                  <path d="M20 44a12 12 0 0 1 24 0" />
+                  <path d="M32 14v6M18 22l4 4M46 22l-4 4M12 32h6M46 32h6M22 14l2 5M40 14l-2 5"/>
+                </svg>
+                <span className="text-[15px] font-medium text-[#1d1d1f]">Mattino</span>
+                <span className="text-xs text-[#86868b]">8:00 - 12:00</span>
+              </button>
+              
+              <button
+                onClick={() => handleTimePreference('afternoon')}
+                className="card-hover p-5 flex flex-col items-center gap-2 group"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  viewBox="0 0 64 64" 
+                  className="w-12 h-12 text-[var(--color-accent)]"
+                  stroke="currentColor" 
+                  fill="none" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  aria-label="Pomeriggio"
+                >
+                  <circle cx="42" cy="22" r="10"/>
+                  <path d="M42 8v4M42 32v4M56 22h-4M32 22h-4M51 13l-3 3M33 31l3-3M51 31l-3-3M33 13l3 3"/>
+                  <path d="M12 48h40"/>
+                </svg>
+                <span className="text-[15px] font-medium text-[#1d1d1f]">Pomeriggio</span>
+                <span className="text-xs text-[#86868b]">12:00 - 18:00</span>
+              </button>
+              
+              <button
+                onClick={() => handleTimePreference('evening')}
+                className="card-hover p-5 flex flex-col items-center gap-2 group col-span-2"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  viewBox="0 0 64 64" 
+                  className="w-12 h-12 text-[var(--color-secondary)]"
+                  stroke="currentColor" 
+                  fill="none" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  aria-label="Sera"
+                >
+                  <path d="M40 14a14 14 0 1 0 10 24a12 12 0 1 1-10-24z"/>
+                  <path d="M20 20l0 4M18 22l4 0"/>
+                  <path d="M26 12l0 3M24.5 13.5l3 0"/>
+                  <path d="M18 48h28"/>
+                </svg>
+                <span className="text-[15px] font-medium text-[#1d1d1f]">Sera</span>
+                <span className="text-xs text-[#86868b]">Dalle 18:00 in poi</span>
+              </button>
+            </div>
           </div>
         </div>
 
