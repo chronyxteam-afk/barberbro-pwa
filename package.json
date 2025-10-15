@@ -1,0 +1,13 @@
+{
+  "name": "barberbro-root",
+  "private": true,
+  "scripts": {
+    "clasp:login": "npx clasp login --no-localhost",
+    "clasp:push": "npx clasp push -f",
+    "clasp:pull": "npx clasp pull",
+    "clasp:deploy": "npx clasp deploy -d 'Deploy automatico'"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.4.2"
+  }
+}

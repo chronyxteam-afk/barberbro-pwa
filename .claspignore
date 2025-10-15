@@ -1,0 +1,7 @@
+# Ignore everything by default
+**/*
+
+# Include only Apps Script sources and manifest
+!apps-script/BarberBro_SlotManager_Complete.gs
+!apps-script/appsscript.json
+
