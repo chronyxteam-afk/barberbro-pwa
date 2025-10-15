@@ -866,6 +866,26 @@ function isOperatoreInAssenza(operatoreId, data) {
 }
 
 /**
+ * Verifica se un intervallo slot [slotStart, slotEnd) si sovrappone ad un'assenza dell'operatore.
+ * Se inclusiveEnd=true, considera l'estremo finale dell'assenza come inclusivo (slotStart == az_endDateTime => sovrapposto).
+ */
+function isSlotCopertoDaAssenza(operatoreId, slotStart, slotEnd, inclusiveEnd = true) {
+  const assenze = loadAssenzeCache();
+  for (let i = 0; i < assenze.length; i++) {
+    const a = assenze[i];
+    if (a.or_ID !== operatoreId) continue;
+    const assenzaStart = a.az_startDateTime;
+    const assenzaEnd = a.az_endDateTime;
+    // Nessuna sovrapposizione se slotEnd <= assenzaStart oppure (slotStart >= assenzaEnd se esclusivo) / (slotStart > assenzaEnd se inclusivo)
+    const noOverlapExclusiveEnd = (slotEnd <= assenzaStart) || (slotStart >= assenzaEnd);
+    const noOverlapInclusiveEnd = (slotEnd <= assenzaStart) || (slotStart > assenzaEnd);
+    const noOverlap = inclusiveEnd ? noOverlapInclusiveEnd : noOverlapExclusiveEnd;
+    if (!noOverlap) return true; // c'è sovrapposizione
+  }
+  return false;
+}
+
+/**
  * Verifica se operatore è in assenza e restituisce l'oggetto assenza con motivo (CACHED!)
  */
 function isOperatoreInAssenzaConMotivo(operatoreId, data) {
@@ -1044,8 +1064,9 @@ function generaSlotCompleti() {
         const slotStart = new Date(currentDate);
         slotStart.setHours(0, minutiCurrent, 0, 0);
         
-        // SALTA questo slot se coperto da assenza (già creato nello STEP A)
-        if (!isOperatoreInAssenza(operatore.or_ID, slotStart)) {
+        // SALTA questo slot se si sovrappone con un'assenza (anche al confine finale)
+        const slotEnd = new Date(slotStart.getTime() + durataSlot * 60000);
+        if (!isSlotCopertoDaAssenza(operatore.or_ID, slotStart, slotEnd, true)) {
           nuoviSlot.push([
             generateId(), // at_ID
             formatDateTime(slotStart), // at_startDateTime
@@ -1398,7 +1419,8 @@ function getSlotDisponibili(servizioId, data, operatoreId = null) {
         datetime: row[1],
         start: atStart,
         orId: row[4],
-        status: row[5]
+        status: row[5],
+        svId: row[3] // per calcolare fine appuntamento prenotato
       });
     }
   }
@@ -1426,11 +1448,29 @@ function getSlotDisponibili(servizioId, data, operatoreId = null) {
     // ORDINA UNA VOLTA (O(n log n))
     slotsOp.sort((a, b) => a.start - b.start);
     
+    // Precalcola gli orari di fine delle prenotazioni non libere per bloccare l'inizio esattamente al confine
+    const finePrenotazioniMs = new Set();
+    for (let k = 0; k < slotsOp.length; k++) {
+      const s = slotsOp[k];
+      if (s.status === 'Prenotato' || s.status === 'Confermato') {
+        const servizioPren = servizi[s.svId];
+        if (servizioPren) {
+          const durataTotPren = servizioPren.sv_duration + bufferPrima + bufferDopo;
+          const endMs = s.start.getTime() + durataTotPren * 60000;
+          finePrenotazioniMs.add(endMs);
+        }
+      }
+    }
+    
     // Scansione lineare O(n)
     for (let i = 0; i < slotsOp.length; i++) {
       const slot = slotsOp[i];
       
       if (slot.status !== 'Libero') continue;
+      // Escludi slot che iniziano esattamente alla fine di una prenotazione (confine non prenotabile)
+      if (finePrenotazioniMs.has(slot.start.getTime())) {
+        continue;
+      }
       
       // Conta slot consecutivi liberi
       let minutiDisponibili = durataSlotMin;
@@ -1856,9 +1896,10 @@ function doGet(e) {
         result = apiGetSlot(e.parameter);
         break;
       
-      // Prenotazioni per telefono cliente
+      // Prenotazioni per telefono o email cliente
       case 'prenotazioni':
-        result = apiGetPrenotazioni(e.parameter.phone || userData.email);
+        const identifier = e.parameter.phone || e.parameter.email || userData.email;
+        result = apiGetPrenotazioni(identifier);
         break;
       
       // Dati cliente per telefono (returning customer)
@@ -2191,23 +2232,32 @@ function apiGetSlot(params) {
 }
 
 /**
- * API: Restituisce prenotazioni cliente per telefono
+ * API: Restituisce prenotazioni cliente per telefono o email
  */
-function apiGetPrenotazioni(phone) {
+function apiGetPrenotazioni(identifier) {
   try {
-    if (!phone) {
-      throw new Error('Telefono obbligatorio');
+    if (!identifier) {
+      throw new Error('Identificatore obbligatorio (telefono o email)');
     }
     
-    // Trova cliente per telefono
-    const cliente = trovaClientePerTelefono(phone);
+    // Determina se identifier è email o telefono
+    const isEmail = identifier.includes('@');
+    let cliente = null;
+    
+    if (isEmail) {
+      // Trova cliente per email
+      cliente = trovaClientePerEmail(identifier);
+    } else {
+      // Trova cliente per telefono
+      cliente = trovaClientePerTelefono(identifier);
+    }
     
     if (!cliente) {
       return {
         success: true,
         prenotazioni: [],
         total: 0,
-        message: 'Nessun cliente trovato con questo telefono'
+        message: `Nessun cliente trovato con questo ${isEmail ? 'email' : 'telefono'}`
       };
     }
     
@@ -2236,15 +2286,22 @@ function apiGetPrenotazioni(phone) {
           const svId = row[3];
           const orId = row[4];
           
+          // Ottieni dati servizio per prezzo e durata
+          const servizio = servizi[svId];
+          
           prenotazioni.push({
-            id: row[0],
-            dateTime: row[1],
+            at_ID: row[0],
+            at_startDateTime: row[1],
+            dateTime: row[1], // Mantieni per compatibilità
             serviceId: svId,
-            serviceName: servizi[svId] ? servizi[svId].sv_name : 'N/A',
+            serviceName: servizio ? servizio.sv_name : 'N/A',
             operatorId: orId,
             operatorName: operatori.find(o => o.or_ID === orId)?.or_name || 'N/A',
             status: status,
-            notes: row[6] || ''
+            notes: row[6] || '',
+            // Aggiungi prezzo e durata dal servizio
+            at_price: servizio ? servizio.sv_price : 0,
+            at_duration: servizio ? servizio.sv_duration : 0
           });
         }
       }
@@ -2252,8 +2309,8 @@ function apiGetPrenotazioni(phone) {
     
     // Ordina per data (più vicine prima)
     prenotazioni.sort((a, b) => {
-      const dateA = parseDataOra(a.dateTime);
-      const dateB = parseDataOra(b.dateTime);
+      const dateA = parseDataOra(a.at_startDateTime);
+      const dateB = parseDataOra(b.at_startDateTime);
       return dateA - dateB;
     });
     
