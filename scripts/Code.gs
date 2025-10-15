@@ -1519,9 +1519,8 @@ function pulisciSlotLiberiScaduti(minNoticeMinutes = 0) {
   let rimossi = 0;
   
   const now = new Date();
-  // Rimuovi slot liberi con inizio PRIMA di (adesso + preavviso)
-  // Include quindi: tutti gli slot nel passato e quelli entro il preavviso
-  const cutoff = new Date(now.getTime() + minNoticeMinutes * 60000);
+  // Cancella solo slot nel passato: AppSheet deve poter usare la finestra di preavviso
+  const cutoff = now;
   
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
@@ -2548,7 +2547,23 @@ function apiGetSlot(params) {
     
     // Se NON c'è servizioId, carica TUTTI gli slot liberi dal foglio
     if (!servizioId) {
-      const tuttiSlots = getAllFreeSlots(dataInizioDate, dataFineDate, operatoreId);
+      let tuttiSlots = getAllFreeSlots(dataInizioDate, dataFineDate, operatoreId);
+      
+      // FILTRO SOLO PER PWA: nascondi slot prima di now + min_notice_hours
+      try {
+        const cfgPwa = loadConfigPWACache();
+        const minNoticeHours = parseInt(cfgPwa.min_notice_hours) || 0;
+        if (minNoticeHours > 0) {
+          const now = new Date();
+          const cutoff = new Date(now.getTime() + minNoticeHours * 60 * 60000);
+          tuttiSlots = tuttiSlots.filter(s => {
+            const d = parseDateTime(s.at_startDateTime);
+            return d >= cutoff;
+          });
+        }
+      } catch (e) {
+        Logger.log('⚠️ Filtro preavviso PWA: ' + e.message);
+      }
       
       // Filtra per fascia oraria se richiesto
       let slotsFiltrati = tuttiSlots;
@@ -2601,6 +2616,22 @@ function apiGetSlot(params) {
     
     // Filtra per fascia oraria se richiesto
     let slotsFiltrati = tuttiSlots;
+    
+    // FILTRO SOLO PER PWA: nascondi slot prima di now + min_notice_hours
+    try {
+      const cfgPwa = loadConfigPWACache();
+      const minNoticeHours = parseInt(cfgPwa.min_notice_hours) || 0;
+      if (minNoticeHours > 0) {
+        const now = new Date();
+        const cutoff = new Date(now.getTime() + minNoticeHours * 60 * 60000);
+        slotsFiltrati = slotsFiltrati.filter(s => {
+          const d = parseDateTime(s.at_startDateTime);
+          return d >= cutoff;
+        });
+      }
+    } catch (e) {
+      Logger.log('⚠️ Filtro preavviso PWA (servizio): ' + e.message);
+    }
     if (fascia && tuttiSlots.length > 0) {
       slotsFiltrati = tuttiSlots.filter(slot => {
         // Verifica che at_startDateTime esista e sia una stringa
