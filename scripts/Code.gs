@@ -1230,13 +1230,24 @@ function generaSlotCompleti() {
   // STEP 4: Archiviazione automatica
   const archiviati = archiviaAppuntamentiVecchi(1);
   
+  // STEP 5: Pulizia slot liberi scaduti (usa min_notice_hours da ConfigPWA)
+  let rimossiScaduti = 0;
+  try {
+    const cfgPwa = loadConfigPWACache();
+    const minNoticeHours = parseInt(cfgPwa.min_notice_hours) || 0;
+    const minNoticeMinutes = minNoticeHours * 60;
+    rimossiScaduti = pulisciSlotLiberiScaduti(minNoticeMinutes);
+  } catch (e) {
+    Logger.log('⚠️ Errore pulizia slot scaduti: ' + e.message);
+  }
+  
   // Tempo esecuzione
   const endTime = new Date();
   const tempoEsecuzione = ((endTime - startTime) / 1000).toFixed(2);
   
-  Logger.log(`✅ Completato in ${tempoEsecuzione}s: ${nuoviSlot.length} slot, ${archiviati} archiviati`);
+  Logger.log(`✅ Completato in ${tempoEsecuzione}s: ${nuoviSlot.length} slot, ${archiviati} archiviati, ${rimossiScaduti} liberi scaduti rimossi`);
   
-  SpreadsheetApp.getUi().alert(`✅ Generazione completata in ${tempoEsecuzione}s!\n\nSlot cancellati: ${slotCancellati}\nSlot generati: ${nuoviSlot.length}\nAppuntamenti archiviati: ${archiviati}`);
+  SpreadsheetApp.getUi().alert(`✅ Generazione completata in ${tempoEsecuzione}s!\n\nSlot cancellati: ${slotCancellati}\nSlot generati: ${nuoviSlot.length}\nAppuntamenti archiviati: ${archiviati}\nSlot liberi scaduti rimossi: ${rimossiScaduti}`);
   
   return nuoviSlot.length;
 }
@@ -1485,6 +1496,80 @@ function menuArchiviaAppuntamenti() {
     const archiviati = archiviaAppuntamentiVecchi(1); // 1 giorno = ieri
     ui.alert(`✅ Archiviazione completata!\n\n${archiviati} appuntamenti spostati in Storico.`);
   }
+}
+
+/**
+ * Rimuove gli slot liberi già non prenotabili (nel passato rispetto a ora)
+ * Opzionale: considera un preavviso in minuti (default 0)
+ */
+function pulisciSlotLiberiScaduti(minNoticeMinutes = 0) {
+  const ss = getFoglio();
+  const sheet = ss.getSheetByName('AppunTamenti');
+  
+  if (!sheet) {
+    SpreadsheetApp.getUi().alert('❌ Foglio AppunTamenti non trovato!');
+    return 0;
+  }
+  
+  const data = sheet.getDataRange().getValues();
+  if (data.length < 2) return 0; // solo header
+  
+  const header = data[0];
+  const righeDaMantenere = [header];
+  let rimossi = 0;
+  
+  const now = new Date();
+  const cutoff = new Date(now.getTime() - minNoticeMinutes * 60000);
+  
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const atStartStr = row[1];
+    const status = row[5];
+    
+    if (!atStartStr) {
+      righeDaMantenere.push(row);
+      continue;
+    }
+    
+    let atStart;
+    try {
+      atStart = atStartStr instanceof Date ? atStartStr : parseDateTime(atStartStr);
+    } catch (e) {
+      // in caso di parsing errato, non rischiare di cancellare: mantieni
+      righeDaMantenere.push(row);
+      continue;
+    }
+    
+    // Elimina SOLO slot LIBERI nel passato (rispetto al cutoff)
+    if (status === 'Libero' && atStart < cutoff) {
+      rimossi++;
+    } else {
+      righeDaMantenere.push(row);
+    }
+  }
+  
+  if (rimossi > 0) {
+    sheet.clear();
+    sheet.getRange(1, 1, righeDaMantenere.length, righeDaMantenere[0].length).setValues(righeDaMantenere);
+  }
+  
+  return rimossi;
+}
+
+/**
+ * Menu: Pulisci slot liberi scaduti (con preavviso opzionale)
+ */
+function menuPulisciSlotScaduti() {
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.prompt('🧹 Pulisci slot liberi scaduti', 'Minuti di preavviso (0 = solo passato):', ui.ButtonSet.OK_CANCEL);
+  
+  if (response.getSelectedButton() !== ui.Button.OK) return;
+  
+  let minNotice = parseInt(response.getResponseText());
+  if (isNaN(minNotice) || minNotice < 0) minNotice = 0;
+  
+  const rimossi = pulisciSlotLiberiScaduti(minNotice);
+  ui.alert(`✅ Pulizia completata\n\nSlot liberi rimossi: ${rimossi}`);
 }
 
 // ============================================================================
@@ -1876,6 +1961,7 @@ function onOpen() {
     .addItem('🗑️ Reset Cache', 'invalidateCache')
     .addSeparator()
     .addItem('📦 Archivia Appuntamenti Vecchi', 'menuArchiviaAppuntamenti')
+    .addItem('🧹 Pulisci slot liberi scaduti', 'menuPulisciSlotScaduti')
     .addToUi();
 }
 
