@@ -941,11 +941,26 @@ function generaSlotCompleti() {
   const header = appuntamentiData[0];
   const righeDaMantenere = [header];
   let slotCancellati = 0;
+  // Mappa orari occupati (non liberi) per operatore per evitare duplicati
+  const occupatiPerOperatore = {};
   
   for (let i = 1; i < appuntamentiData.length; i++) {
     const status = appuntamentiData[i][5];
     if (status !== 'Libero' && status !== 'Non Disponibile') {
       righeDaMantenere.push(appuntamentiData[i]);
+      // Registra come occupato questo orario per l'operatore
+      const atStartStr = appuntamentiData[i][1];
+      const orId = appuntamentiData[i][4];
+      if (atStartStr && orId) {
+        try {
+          const atStart = parseDateTime(atStartStr);
+          const key = String(orId);
+          if (!occupatiPerOperatore[key]) occupatiPerOperatore[key] = new Set();
+          occupatiPerOperatore[key].add(atStart.getTime());
+        } catch (e) {
+          // Ignora errori parsing, non bloccare generazione
+        }
+      }
     } else {
       slotCancellati++;
     }
@@ -1064,6 +1079,14 @@ function generaSlotCompleti() {
         const slotStart = new Date(currentDate);
         slotStart.setHours(0, minutiCurrent, 0, 0);
         
+        // SALTA questo slot se già occupato da appuntamento (evita duplicati sullo stesso orario)
+        const occSet = occupatiPerOperatore[String(operatore.or_ID)];
+        const slotStartMs = slotStart.getTime();
+        if (occSet && occSet.has(slotStartMs)) {
+          minutiCurrent += durataSlot;
+          continue;
+        }
+
         // SALTA questo slot se si sovrappone con un'assenza (anche al confine finale)
         const slotEnd = new Date(slotStart.getTime() + durataSlot * 60000);
         if (!isSlotCopertoDaAssenza(operatore.or_ID, slotStart, slotEnd, true)) {
