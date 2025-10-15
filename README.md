@@ -1,57 +1,66 @@
 # 🪒 BarberBro - Sistema Completo Gestione Prenotazioni
 
 Sistema completo per gestione prenotazioni barbiere con:
-- **Apps Script Backend** - API REST + gestione slot dinamici + **OAuth Google Login** ✨  
+- **Apps Script Backend** - API REST + gestione slot dinamici + OAuth Google Login ✨  
 - **PWA Frontend** - App web progressiva per clienti (Apple-style design)
 - **Multi-tenant** - Configurabile per ogni negozio (50+ parametri)
 - **Sicurezza** - Autenticazione OAuth, token sessione, verifica accessi
 
-**Versione**: 2.2  
-**Ultimo aggiornamento**: 10 Ottobre 2025
+**Versione**: 2.3  
+**Ultimo aggiornamento**: 15 Ottobre 2025
 
 ---
 
-## 🎯 **NOVITÀ VERSIONE 2.2**
+## 🎯 **NOVITÀ VERSIONE 2.3**
 
-### ✨ **Sistema OAuth Completo**
-- � Login Google OAuth (no password salvate)
-- 🎫 Token sessione JWT con expiry configurabile
-- 🛡️ Verifica accessi cliente (`cn_enablePWA`)
-- 🔒 API protette con middleware auth
+### ✨ **Gestione Slot Avanzata**
+- 🧹 Pulizia automatica slot passati (via `generaSlotCompleti`)
+- ⏰ Parametro `min_notice_hours` per preavviso minimo prenotazione
+- 🚫 Filtro API lato PWA: nasconde slot troppo vicini (mantenuti per AppSheet)
+- 🔧 Fix boundary conditions: slot non più generati su fine prenotazione/assenza
 
-### 📋 **ConfigPWA Parametrizzato (50+ parametri)**
-- 🎨 7 sezioni: Generale, OAuth, Colori, UI, Regole, Messaggi, Avanzate
-- 🔧 Zero hardcode: tutto configurabile da foglio
-- 📖 Guida integrata con documentazione completa
-- 🌈 Personalizzazione colori, testi, funzionalità
+### 🔄 **Deployment Automatizzato**
+- ⚙️ GitHub Actions workflow per deploy PWA su GitHub Pages
+- 📦 Build automatica su push a `main`
+- 🔐 Gestione sicura credenziali OAuth via workflow
 
-### 👥 **Gestione Accessi PWA**
-- ✅ Menu admin per abilitare/disabilitare clienti
-- 📊 Monitoraggio ultimo login + contatore prenotazioni
-- 🚨 Blocco emergenza (disabilita tutti)
-- 📧 Ricerca clienti per email OAuth
+### 🧹 **Pulizia Codebase**
+- 📁 Archiviazione script Python di test/debug in `archive/`
+- 🗑️ Rimozione file ridondanti e documentazione obsoleta
+- 📂 Struttura progetto semplificata e organizzata
 
 ---
 
-## �📁 **STRUTTURA PROGETTO**
+## 📁 **STRUTTURA PROGETTO**
 
 ```
 barberBro-Start/
-├── apps-script/          ← Backend Apps Script + API REST + OAuth
-│   ├── BarberBro_SlotManager_Complete.gs  (2200+ righe)
+├── scripts/              ← Backend Apps Script (sorgente unico)
+│   ├── Code.gs           (2900+ righe - API + OAuth + Slot Manager)
+│   ├── appsscript.json
 │   └── README.md
 ├── pwa/                  ← Frontend PWA React + Vite
 │   ├── src/
-│   │   ├── components/   (9 componenti Apple-style)
+│   │   ├── components/   (13 componenti Apple-style)
 │   │   ├── store/        (Zustand + persistence)
 │   │   └── services/     (apiService con OAuth)
+│   ├── dist/             (build per GitHub Pages)
 │   ├── package.json
-│   └── README.md
+│   └── README_OAUTH.md
+├── .github/
+│   └── workflows/
+│       └── deploy.yml    ← CI/CD automatico per PWA
 ├── docs/                 ← Documentazione completa
-│   ├── SETUP_APPS_SCRIPT.md       (400+ righe setup backend)
-│   └── RIEPILOGO_MODIFICHE.md     (changelog dettagliato)
-├── tools/                ← Tool Python gestione (opzionale)
+│   ├── SETUP_APPS_SCRIPT.md
+│   ├── GUIDA_CREDENZIALI.md
+│   ├── GUIDA_SLOT_MANAGER.md
+│   └── RIEPILOGO_MODIFICHE.md
 ├── credentials/          ← Credenziali (gitignored!)
+│   ├── service_account.json
+│   └── token.pickle
+├── .clasp.json           ← Configurazione clasp (deploy Apps Script)
+├── package.json          ← Script npm per clasp
+├── requirements.txt      ← Dipendenze Python (opzionali)
 └── README.md             ← Questo file
 ```
 
@@ -65,32 +74,41 @@ barberBro-Start/
 - Account Google (per Apps Script + Sheets)
 - Google Cloud Console access (per OAuth Client ID)
 - Node.js 18+ (per PWA)
-- Python 3.8+ (per tool gestione, opzionale)
+- Clasp CLI (`npm install -g @google/clasp`)
 
 ### **1. Setup Backend (15 minuti)**
 
-#### A. Installa Apps Script
+#### A. Crea Google Sheets
 ```bash
 # 1. Crea nuovo Google Sheets
 https://sheets.google.com → Nuovo → Rinomina "BarberBro [Nome Negozio]"
-
-# 2. Apri Apps Script
-Menu Estensioni → Apps Script
-
-# 3. Copia codice
-Copia tutto da: apps-script/BarberBro_SlotManager_Complete.gs
-Incolla in editor → Salva
-
-# 4. Esegui setup
-Seleziona funzione: setup → Esegui ▶️ → Autorizza
-Seleziona funzione: setupConfigPWA → Esegui ▶️
-Seleziona funzione: setupGuidaConfigPWA → Esegui ▶️
 ```
 
-#### B. Setup Google OAuth
+#### B. Deploy Apps Script con Clasp
+```bash
+# 1. Login clasp
+npm run clasp:login
+
+# 2. Crea nuovo progetto Apps Script
+clasp create --type sheets --title "BarberBro API"
+# Annota lo SCRIPT_ID dal file .clasp.json
+
+# 3. Push codice
+npm run clasp:push
+
+# 4. Apri editor online
+clasp open
+
+# 5. Esegui setup (nell'editor online)
+# Seleziona funzione: setup → Esegui ▶️ → Autorizza
+# Seleziona funzione: setupConfigPWA → Esegui ▶️
+# Seleziona funzione: setupGuidaConfigPWA → Esegui ▶️
+```
+
+#### C. Setup Google OAuth
 ```bash
 # 1. Google Cloud Console
-https://console.cloud.google.com → Nuovo progetto
+https://console.cloud.google.com → Nuovo progetto "BarberBro"
 
 # 2. Configura OAuth
 API e Servizi → Schermata consenso OAuth
@@ -101,22 +119,27 @@ API e Servizi → Schermata consenso OAuth
 # 3. Crea credenziali
 Credenziali → Crea → ID client OAuth
 - Tipo: Applicazione web
-- Origini JavaScript: https://script.google.com
+- Origini JavaScript: https://tuousername.github.io
+- URI redirect: https://tuousername.github.io/barberbro-pwa/
 - Copia Client ID
 
 # 4. Incolla in Sheets
 Foglio ConfigPWA → google_client_id → Incolla Client ID
 ```
 
-� **Guida completa**: `docs/SETUP_APPS_SCRIPT.md`
+📖 **Guida completa**: `docs/SETUP_APPS_SCRIPT.md`
 
-#### C. Deploy Web App
+#### D. Deploy Web App
 ```bash
+# Metodo 1: Clasp (consigliato)
+npm run clasp:deploy
+
+# Metodo 2: Editor online
 # Apps Script → Deploy → Nuova implementazione
-- Tipo: App web
-- Esegui come: Me
-- Chi ha accesso: Chiunque
-- Implementa → COPIA URL
+# - Tipo: App web
+# - Esegui come: Me
+# - Chi ha accesso: Chiunque
+# - Implementa → COPIA URL
 ```
 
 Salva URL (formato: `https://script.google.com/macros/s/AKfycby.../exec`)
@@ -130,56 +153,34 @@ Salva URL (formato: `https://script.google.com/macros/s/AKfycby.../exec`)
 cd pwa
 npm install
 
-# 2. Configura API
+# 2. Configura API URL
 # Crea file .env
-echo "VITE_API_URL=https://script.google.com/macros/s/TUO_ID/exec" > .env
+echo "VITE_API_URL=https://script.google.com/macros/s/TUO_SCRIPT_ID/exec" > .env
 
-# 3. Installa OAuth Google
-npm install @react-oauth/google
-
-# 4. Run dev
+# 3. Test in locale
 npm run dev
+# Apri: http://localhost:5173
 ```
 
-Apri: http://localhost:3002
-
----
-
-## 📖 **DOCUMENTAZIONE**
-
-### 📄 **Guide Complete**
-- **[SETUP_APPS_SCRIPT.md](docs/SETUP_APPS_SCRIPT.md)** - Setup backend passo-passo (400+ righe)
-  - Setup iniziale Apps Script
-  - Configurazione Google OAuth (16 step)
-  - Gestione fogli (ConfigPWA, Clienti, etc)
-  - Deploy Web App
-  - Test API
-  - Troubleshooting
-
-- **[RIEPILOGO_MODIFICHE.md](docs/RIEPILOGO_MODIFICHE.md)** - Changelog v2.2
-  - Tutte le modifiche OAuth
-  - Parametri ConfigPWA aggiunti
-  - Nuove funzioni API
-  - Cosa manca lato PWA
-
-### 📂 **README Specifici**
-- `apps-script/README.md` - Dettagli backend API
-- `pwa/README.md` - Dettagli frontend React
-- `tools/README.md` - Tool Python gestione
-- Copia URL API
-```
-
-**📖 Guida completa**: [`apps-script/README.md`](apps-script/README.md)
-
-### **2. Setup PWA** (Coming soon)
+#### Deploy su GitHub Pages
 
 ```bash
-cd pwa
-npm install
-npm run dev
-```
+# 1. Crea repo GitHub
+git remote add origin https://github.com/tuousername/barberbro-pwa.git
 
-**📖 Guida completa**: [`pwa/README.md`](pwa/README.md)
+# 2. Aggiorna workflow
+# Edita .github/workflows/deploy.yml riga 39:
+# VITE_API_URL: https://script.google.com/macros/s/TUO_SCRIPT_ID/exec
+
+# 3. Push
+git push -u origin main
+
+# 4. Attiva GitHub Pages
+# Repo Settings → Pages → Source: GitHub Actions
+
+# 5. Attendi deploy (2-3 min)
+# URL: https://tuousername.github.io/barberbro-pwa/
+```
 
 ---
 
@@ -188,56 +189,46 @@ npm run dev
 ### ✅ **Backend Apps Script**
 
 #### **Sistema Slot Dinamici**
-- Generazione automatica slot per N settimane
-- Gestione assenze operatori
-- Buffer tempo (preparazione + pulizia) configurabile
-- Archiviazione automatica appuntamenti vecchi
+- ✨ Generazione automatica slot per N settimane
+- 🧹 Pulizia automatica slot liberi passati
+- 🚫 Controllo boundary: non genera slot su fine prenotazione/assenza
+- ⏰ Gestione assenze operatori con overlap check
+- 🕐 Buffer tempo (preparazione + pulizia) configurabile
+- 📦 Archiviazione automatica appuntamenti vecchi
 
 #### **API REST Completa**
-- **GET** `/config` - Configurazione PWA multi-tenant
+- **GET** `/config` - Configurazione PWA multi-tenant (pubblico)
+- **GET** `/login?email=X` - Login OAuth + token JWT (pubblico)
 - **GET** `/servizi` - Lista servizi (prezzo, durata)
 - **GET** `/operatori` - Lista operatori attivi
-- **GET** `/slot` - Slot disponibili (con filtri avanzati)
+- **GET** `/slot` - Slot disponibili con filtro `min_notice_hours` per PWA
 - **GET** `/cliente?phone=X` - Dati cliente + preferenze
-- **GET** `/prenotazioni?phone=X` - Prenotazioni cliente
+- **GET** `/prenotazioni` - Prenotazioni cliente (email/phone)
 - **POST** `/prenota` - Crea prenotazione + salva cliente
 - **POST** `/cancella` - Cancella prenotazione
 
 #### **Performance**
-- generaSlotCompleti: ~300-500ms
+- generaSlotCompleti: ~300-500ms (include pulizia)
 - getSlotDisponibili: ~80-120ms  
 - Cache hit rate: ~95%
 - API response: <200ms
 
-### 🚧 **PWA React** (In sviluppo)
+### ✅ **PWA React**
 
-#### **Planned Features**
-- 🏠 Welcome screen con returning customer
-- ✂️ Selezione servizi intuitiva
+#### **Features Implementate**
+- 🔐 Login Google OAuth con JWT token
+- 🏠 Welcome screen con returning customer detection
+- ✂️ Selezione servizi categorizzata
 - 🍀 "Mi sento fortunato" - primi slot disponibili
-- 👤 Selezione barbiere preferito
-- 📅 Calendario slot interattivo
-- 📱 Prenotazione 1-tap
-- 💾 Memorizzazione preferenze cliente
-- 📴 Offline-first con service worker
-- 🎨 Multi-tenant (colori/logo/testi configurabili)
-
----
-
-## 📚 **DOCUMENTAZIONE**
-
-### **Guide Dettagliate**
-
-- 📜 [`apps-script/README.md`](apps-script/README.md) - Backend API completo
-- 📱 [`pwa/README.md`](pwa/README.md) - Frontend PWA (TBD)
-- 🛠️ [`tools/README.md`](tools/README.md) - Tool Python gestione
-- 🔐 [`docs/GUIDA_CREDENZIALI.md`](docs/GUIDA_CREDENZIALI.md) - Setup Google Cloud
-- 📤 [`docs/GUIDA_PUSH_PULL.md`](docs/GUIDA_PUSH_PULL.md) - Gestione script
-- 🎓 [`docs/GUIDA_SLOT_MANAGER.md`](docs/GUIDA_SLOT_MANAGER.md) - Sistema slot
-
-### **API Reference**
-
-Vedi [`apps-script/README.md#api-rest-endpoints`](apps-script/README.md#-api-rest-endpoints) per documentazione completa API.
+- 👤 Selezione barbiere (o "Qualsiasi operatore")
+- 📅 Calendario slot interattivo raggruppato per giorni
+- ⏰ Filtro fasce orarie (mattina/pomeriggio/sera)
+- 📱 Prenotazione guidata step-by-step
+- ✅ Schermata conferma con Google Calendar export
+- 📋 Le mie prenotazioni con possibilità cancellazione
+- 💾 Memorizzazione preferenze cliente (Zustand persist)
+- 🎨 Apple-style design con animazioni fluide
+- 📴 Service Worker con cache strategie
 
 ---
 
@@ -250,133 +241,167 @@ Vedi [`apps-script/README.md#api-rest-endpoints`](apps-script/README.md#-api-res
 └──────┬──────┘
        │ HTTPS
        ▼
-┌─────────────────┐
-│   PWA React     │ Frontend (Vercel/Netlify)
-│  (pwa/)         │
-└──────┬──────────┘
-       │ fetch()
+┌──────────────────┐
+│ GitHub Pages PWA │ Frontend (React + Vite)
+│ (pwa/dist/)      │
+└──────┬───────────┘
+       │ fetch() + OAuth token
        ▼
 ┌─────────────────┐
-│ Apps Script API │ Backend REST (Google)
-│ (apps-script/)  │
+│ Apps Script API │ Backend REST + JWT
+│ (scripts/Code)  │
 └──────┬──────────┘
        │ Direct Access
        ▼
 ┌─────────────────┐
 │ Google Sheets   │ Database
-│ (Fogli)         │
+│ (10 fogli)      │
 └─────────────────┘
 ```
 
 ### **Fogli Google Sheets**
 
-- **Configurazione** - Parametri sistema (orari, buffer, slot)
-- **ConfigPWA** - Parametri PWA multi-tenant (nome, colori, logo)
-- **Clienti** - Anagrafica clienti (gestito auto da PWA)
-- **SerVizi** - Lista servizi (prezzo, durata)
-- **OpeRatori** - Lista operatori (orari, pause)
+- **Configurazione** - Parametri sistema (orari, buffer, slot, `min_notice_hours`)
+- **ConfigPWA** - Parametri PWA multi-tenant (50+ parametri)
+- **GuidaConfigPWA** - Documentazione inline parametri
+- **Clienti** - Anagrafica clienti con OAuth + flag `cn_enablePWA`
+- **SerVizi** - Lista servizi (prezzo, durata, categoria)
+- **OpeRatori** - Lista operatori (orari, pause, immagine)
 - **AppunTamenti** - Slot + prenotazioni unificati
-- **Storico** - Appuntamenti archiviati
+- **Storico** - Appuntamenti archiviati (4 stati)
+- **Assenze** - Periodi di assenza operatori
 
 ---
 
 ## 🔧 **MANUTENZIONE**
 
-### **Aggiornare Backend**
+### **Aggiornare Backend Apps Script**
 
 ```bash
-cd tools
-python apps_script_manager.py push-complete SCRIPT_ID
+# 1. Modifica scripts/Code.gs
+
+# 2. Push con clasp
+npm run clasp:push
+
+# 3. Deploy nuova versione
+npm run clasp:deploy
 ```
 
-### **Deploy PWA**
+### **Aggiornare PWA**
 
 ```bash
+# Metodo 1: Automatico (GitHub Actions)
+git add pwa/
+git commit -m "feat: nuova funzionalità"
+git push origin main
+# → Deploy automatico su GitHub Pages (2-3 min)
+
+# Metodo 2: Build locale
 cd pwa
 npm run build
-vercel --prod
+# Verifica build in pwa/dist/
+git add pwa/dist
+git commit -m "build: rebuild PWA"
+git push
 ```
 
 ### **Backup Database**
 
-Esporta Google Sheets manualmente o usa API.
+```bash
+# Google Sheets → File → Scarica → Foglio di lavoro Google (.xlsx)
+# Oppure usa Google Sheets API per backup automatico
+```
 
 ---
 
 ## 🎨 **MULTI-TENANT**
 
-Ogni barbiere ha:
-- ✅ Google Sheets separato
-- ✅ Apps Script deployment separato
-- ✅ PWA deployment separato (stesso codice)
-- ✅ ConfigPWA personalizzato (nome, colori, logo)
+Ogni barbiere può avere:
+- ✅ Google Sheets separato (stesso template)
+- ✅ Apps Script deployment separato (stesso codice)
+- ✅ PWA deployment separato (stesso codice, diverso .env)
+- ✅ ConfigPWA personalizzato (nome, colori, logo, testi)
 
 ### **Setup Nuovo Negozio**
 
-1. Crea nuovo Google Sheets (copia template)
-2. Deploy Apps Script → Ottieni URL API
-3. Deploy PWA con `.env`:
-   ```bash
-   VITE_API_URL=https://script.google.com/macros/s/.../exec
-   VITE_SHOP_NAME="BarberBro Milano"
-   ```
-4. Configura foglio ConfigPWA
+1. Duplica Google Sheets template
+2. Deploy Apps Script con clasp → Ottieni URL API
+3. Fork repo PWA → Configura `.github/workflows/deploy.yml` con nuovo API URL
+4. Push su GitHub → Attiva GitHub Pages
+5. Configura foglio ConfigPWA (nome, colori, OAuth Client ID)
 
 ---
 
 ## 🐛 **TROUBLESHOOTING**
 
-### **Menu non appare su Sheets**
-Esegui `installaTriggerMenu()` una volta da Apps Script editor.
+### **PWA mostra slot che dovrebbero essere nascosti**
+- Verifica parametro `min_notice_hours` in foglio Configurazione
+- Controlla che il deploy sia avvenuto (GitHub Actions)
+- Hard refresh PWA (DevTools → Application → Clear storage + Unregister SW)
 
-### **API ritorna errore 403**
-Deploy Web App con "Who has access: **Anyone**".
+### **CORS error dalla PWA**
+- Verifica che il Web App sia deployato come "Anyone" (non "Anyone with Google account")
+- Usa il deployment URL più recente (non il "Test deployment")
 
-### **Slot non generati**
-Verifica foglio Configurazione compilato, operatori attivi presenti.
+### **API ritorna 401 Unauthorized**
+- Token JWT scaduto → Logout e login di nuovo
+- Verifica che `cn_enablePWA = TRUE` per il cliente nel foglio Clienti
 
-### **PWA non connette API**
-Controlla URL in `.env`, verifica CORS attivo su Apps Script.
+### **Slot duplicati o sovrapposti**
+- Esegui `generaSlotCompleti()` manualmente → pulisce e rigenera
+- Verifica che non ci siano prenotazioni "Libero" sovrapposte manualmente
 
 ---
 
-## 📞 **SUPPORTO**
+## 📞 **SUPPORTO & RISORSE**
 
 - [Google Sheets API Docs](https://developers.google.com/sheets/api)
 - [Apps Script Reference](https://developers.google.com/apps-script/reference)  
 - [Vite PWA Plugin](https://vite-pwa-org.netlify.app/)
+- [Clasp CLI Docs](https://github.com/google/clasp)
+- [GitHub Actions Docs](https://docs.github.com/en/actions)
 
 ---
 
 ## 📝 **CHANGELOG**
+
+### **v2.3** (15 Ottobre 2025)
+- ✅ Pulizia automatica slot passati in `generaSlotCompleti()`
+- ✅ Filtro `min_notice_hours` in `apiGetSlot()` (PWA only)
+- ✅ Fix boundary conditions: slot non generati su fine prenotazione/assenza
+- ✅ GitHub Actions workflow per deploy automatico PWA
+- ✅ Cleanup codebase: archiviazione script test in `archive/`
+- ✅ Migrazione da `apps-script/` a `scripts/` come sorgente unico
+
+### **v2.2** (10 Ottobre 2025)
+- ✅ Sistema OAuth completo con JWT token
+- ✅ ConfigPWA parametrizzato (50+ parametri)
+- ✅ Gestione accessi PWA (`cn_enablePWA`)
+- ✅ Menu admin abilitazione clienti
 
 ### **v2.1** (8 Ottobre 2025)
 - ✅ API REST completa per PWA
 - ✅ Integrazione foglio Clienti con cache
 - ✅ Endpoint cliente + preferenze (returning customer)
 - ✅ ConfigPWA multi-tenant
-- ✅ Riorganizzazione progetto (apps-script/, pwa/, tools/)
 
 ### **v2.0**
 - ✅ Sistema buffer tempo (prep + pulizia)
 - ✅ Architettura unificata AppunTamenti
 - ✅ Cache 4-tier (CONFIG, ASSENZE, SERVIZI, OPERATORI)
-- ✅ Archiviazione 4 stati (Completato, Cancellato, Non Presentato, Annullato)
-- ✅ Ottimizzazione codice -21%
-
-### **v1.0**
-- ✅ Generazione slot base
-- ✅ Gestione assenze operatori
-- ✅ Integrazione Google Sheets
+- ✅ Archiviazione 4 stati
 
 ---
 
 ## 📄 **LICENSE**
 
 Proprietario: BarberBro Project  
-Versione: 2.1  
-Ultimo aggiornamento: 8 Ottobre 2025
+Versione: 2.3  
+Ultimo aggiornamento: 15 Ottobre 2025
 
 ---
 
-**🚀 Ready to launch!** Segui le guide nelle sottocartelle per iniziare.
+**🚀 Ready to launch!** Segui le guide per iniziare:
+1. `docs/SETUP_APPS_SCRIPT.md` - Setup backend completo
+2. `pwa/README_OAUTH.md` - Configurazione OAuth PWA
+3. `.github/workflows/deploy.yml` - CI/CD automatico
