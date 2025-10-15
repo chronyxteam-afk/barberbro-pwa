@@ -1519,7 +1519,9 @@ function pulisciSlotLiberiScaduti(minNoticeMinutes = 0) {
   let rimossi = 0;
   
   const now = new Date();
-  const cutoff = new Date(now.getTime() - minNoticeMinutes * 60000);
+  // Rimuovi slot liberi con inizio PRIMA di (adesso + preavviso)
+  // Include quindi: tutti gli slot nel passato e quelli entro il preavviso
+  const cutoff = new Date(now.getTime() + minNoticeMinutes * 60000);
   
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
@@ -1540,7 +1542,7 @@ function pulisciSlotLiberiScaduti(minNoticeMinutes = 0) {
       continue;
     }
     
-    // Elimina SOLO slot LIBERI nel passato (rispetto al cutoff)
+    // Elimina SOLO slot LIBERI antecedenti al cutoff (passato o entro preavviso)
     if (status === 'Libero' && atStart < cutoff) {
       rimossi++;
     } else {
