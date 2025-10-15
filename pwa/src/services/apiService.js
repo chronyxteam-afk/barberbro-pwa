@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL
+const API_URL = import.meta.env.VITE_API_URL || 'https://script.google.com/macros/s/AKfycbwFBG1nbA0pyiWfFpl5MqybR3bEYYwFJHY6GT3l6hfboU5kXnzdamJETXintswcLxI2Gw/exec'
 
 if (!API_URL) {
   console.error('⚠️ VITE_API_URL non configurato nel file .env')
