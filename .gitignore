@@ -28,7 +28,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-dist/
+# dist/ ← Commentato per permettere pwa/dist su GitHub Pages
 downloads/
 eggs/
 .eggs/
@@ -50,7 +50,6 @@ ENV/
 
 # Node.js / PWA
 pwa/node_modules/
-# pwa/dist/ ← Commentato per permettere deploy su GitHub Pages
 pwa/build/
 pwa/.vite/
 node_modules/
