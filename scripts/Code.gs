@@ -944,6 +944,25 @@ function isOperatoreInAssenza(operatoreId, data) {
 }
 
 /**
+ * Verifica se un intervallo slot [slotStart, slotEnd) si sovrappone ad un'assenza dell'operatore.
+ * Se inclusiveEnd=true, considera l'estremo finale dell'assenza come inclusivo (slotStart == az_endDateTime => sovrapposto).
+ */
+function isSlotCopertoDaAssenza(operatoreId, slotStart, slotEnd, inclusiveEnd = true) {
+  const assenze = loadAssenzeCache();
+  for (let i = 0; i < assenze.length; i++) {
+    const a = assenze[i];
+    if (a.or_ID !== operatoreId) continue;
+    const assenzaStart = a.az_startDateTime;
+    const assenzaEnd = a.az_endDateTime;
+    const noOverlapExclusiveEnd = (slotEnd <= assenzaStart) || (slotStart >= assenzaEnd);
+    const noOverlapInclusiveEnd = (slotEnd <= assenzaStart) || (slotStart > assenzaEnd);
+    const noOverlap = inclusiveEnd ? noOverlapInclusiveEnd : noOverlapExclusiveEnd;
+    if (!noOverlap) return true;
+  }
+  return false;
+}
+
+/**
  * Verifica se operatore è in assenza e restituisce l'oggetto assenza con motivo (CACHED!)
  */
 function isOperatoreInAssenzaConMotivo(operatoreId, data) {
@@ -1091,6 +1110,36 @@ function generaSlotCompleti() {
     }
   });
   
+  // Precalcola intervalli prenotati attivi per operatore (Prenotato/Confermato)
+  const intervalliPrenotatiPerOperatore = {};
+  try {
+    const dataAll = sheetAppuntamenti.getDataRange().getValues();
+    const servizi = loadServiziCache();
+    const config = loadConfigCache();
+    const bufferAbilitato = config['buffer_abilita'] === 'TRUE' || config['buffer_abilita'] === true;
+    const bufferPrima = bufferAbilitato ? (parseInt(config['buffer_prima_default']) || 0) : 0;
+    const bufferDopo = bufferAbilitato ? (parseInt(config['buffer_dopo_default']) || 0) : 0;
+    for (let i = 1; i < dataAll.length; i++) {
+      const row = dataAll[i];
+      const status = row[5];
+      if (status === 'Prenotato' || status === 'Confermato') {
+        const atStartStr = row[1];
+        const orId = row[4];
+        const svId = row[3];
+        if (atStartStr && orId && svId && servizi[svId]) {
+          const atStart = parseDateTime(atStartStr);
+          const durataTot = (servizi[svId].sv_duration || 0) + bufferPrima + bufferDopo;
+          const atEnd = new Date(atStart.getTime() + durataTot * 60000);
+          const key = String(orId);
+          if (!intervalliPrenotatiPerOperatore[key]) intervalliPrenotatiPerOperatore[key] = [];
+          intervalliPrenotatiPerOperatore[key].push([atStart.getTime(), atEnd.getTime()]);
+        }
+      }
+    }
+  } catch (e) {
+    Logger.log('⚠️ Errore precalcolo intervalli prenotati: ' + e.message);
+  }
+
   // POI: Genera slot LIBERI normali
   operatori.forEach(operatore => {
     let currentDate = new Date(dataInizio);
@@ -1122,8 +1171,23 @@ function generaSlotCompleti() {
         const slotStart = new Date(currentDate);
         slotStart.setHours(0, minutiCurrent, 0, 0);
         
-        // SALTA questo slot se coperto da assenza (già creato nello STEP A)
-        if (!isOperatoreInAssenza(operatore.or_ID, slotStart)) {
+        // SALTA se si sovrappone a prenotazioni attive dell'operatore
+        const prenList = intervalliPrenotatiPerOperatore[String(operatore.or_ID)] || [];
+        const slotStartMs = slotStart.getTime();
+        const slotEndMs = slotStartMs + durataSlot * 60000;
+        let overlapPren = false;
+        for (let p = 0; p < prenList.length; p++) {
+          const [pStart, pEnd] = prenList[p];
+          const noOverlap = (slotEndMs <= pStart) || (slotStartMs > pEnd);
+          if (!noOverlap) { overlapPren = true; break; }
+        }
+        if (overlapPren) {
+          minutiCurrent += durataSlot;
+          continue;
+        }
+
+        // SALTA questo slot se coperto da assenza/sovrapposizione (confine finale non prenotabile)
+        if (!isSlotCopertoDaAssenza(operatore.or_ID, slotStart, new Date(slotStart.getTime() + durataSlot * 60000), true)) {
           nuoviSlot.push([
             generateId(), // at_ID
             formatDateTime(slotStart), // at_startDateTime
@@ -1613,11 +1677,25 @@ function getSlotDisponibili(servizioId, data, operatoreId = null) {
     // ORDINA UNA VOLTA (O(n log n))
     slotsOp.sort((a, b) => a.start - b.start);
     
+    // Precalcola gli orari di fine delle prenotazioni per bloccare inizio al confine
+    const finePrenotazioniMs = new Set();
+    for (let k = 0; k < slotsOp.length; k++) {
+      const s = slotsOp[k];
+      if (s.status === 'Prenotato' || s.status === 'Confermato') {
+        const servizioPren = servizi[s.svId];
+        if (servizioPren) {
+          const durataTotPren = (servizioPren.sv_duration || 0) + bufferPrima + bufferDopo;
+          finePrenotazioniMs.add(s.start.getTime() + durataTotPren * 60000);
+        }
+      }
+    }
+    
     // Scansione lineare O(n)
     for (let i = 0; i < slotsOp.length; i++) {
       const slot = slotsOp[i];
       
       if (slot.status !== 'Libero') continue;
+      if (finePrenotazioniMs.has(slot.start.getTime())) continue;
       
       // Conta slot consecutivi liberi
       let minutiDisponibili = durataSlotMin;
