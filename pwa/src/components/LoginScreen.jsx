@@ -7,6 +7,7 @@ export default function LoginScreen() {
   const { config, login } = useStore();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleProcessing, setGoogleProcessing] = useState(false);
 
   const handleGoogleSuccess = async (credentialResponse) => {
     setLoading(true);
@@ -85,21 +86,32 @@ export default function LoginScreen() {
 
           {/* Google Login Button */}
           <div className="flex justify-center mb-6">
-            {loading ? (
-              <div className="w-full h-12 bg-[#f5f5f7] rounded-[12px] flex items-center justify-center">
+            {loading || googleProcessing ? (
+              <div className="w-full h-12 bg-[#f5f5f7] rounded-[12px] flex items-center justify-center gap-3">
                 <div className="w-6 h-6 border-3 border-[#007AFF] border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-[#86868b] text-sm">
+                  {googleProcessing ? 'Connessione in corso...' : 'Verifica account...'}
+                </span>
               </div>
             ) : (
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                useOneTap={false}
-                text="signin_with"
-                shape="rectangular"
-                theme="outline"
-                size="large"
-                width="300"
-              />
+              <div 
+                onClick={() => setGoogleProcessing(true)}
+                className="relative"
+              >
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={(err) => {
+                    setGoogleProcessing(false);
+                    handleGoogleError(err);
+                  }}
+                  useOneTap={false}
+                  text="signin_with"
+                  shape="rectangular"
+                  theme="outline"
+                  size="large"
+                  width="300"
+                />
+              </div>
             )}
           </div>
 
