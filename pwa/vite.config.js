@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   base: '/barberbro-pwa/',
   plugins: [
     react(),
@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'BarberBro Booking',
-        short_name: 'BarberBro',
-        description: 'Prenota il tuo taglio in pochi tap',
+        name: process.env.VITE_APP_NAME || 'BarberBro Booking',
+        short_name: process.env.VITE_APP_SHORT_NAME || 'BarberBro',
+        description: process.env.VITE_APP_DESCRIPTION || 'Prenota il tuo taglio in pochi tap',
         theme_color: '#C19A6B',
         background_color: '#1F1F1F',
         display: 'standalone',
@@ -70,4 +70,4 @@ export default defineConfig({
       }
     }
   }
-})
+}))
