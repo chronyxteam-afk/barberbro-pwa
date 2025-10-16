@@ -1,0 +1,25 @@
+{
+  "name": "BarberBro Booking",
+  "short_name": "BarberBro",
+  "description": "Prenota il tuo taglio in pochi tap",
+  "theme_color": "#C19A6B",
+  "background_color": "#1F1F1F",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/barberbro-pwa/",
+  "start_url": "/barberbro-pwa/",
+  "icons": [
+    {
+      "src": "/barberbro-pwa/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/barberbro-pwa/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+

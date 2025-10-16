@@ -37,9 +37,6 @@ jobs:
         working-directory: ./pwa
         env:
           VITE_API_URL: https://script.google.com/macros/s/AKfycbwFBG1nbA0pyiWfFpl5MqybR3bEYYwFJHY6GT3l6hfboU5kXnzdamJETXintswcLxI2Gw/exec
-          VITE_APP_NAME: ${{ vars.APP_NAME || 'BarberBro Booking' }}
-          VITE_APP_SHORT_NAME: ${{ vars.APP_SHORT_NAME || 'BarberBro' }}
-          VITE_APP_DESCRIPTION: ${{ vars.APP_DESCRIPTION || 'Prenota il tuo taglio in pochi tap' }}
       
       - name: Setup Pages
         uses: actions/configure-pages@v4

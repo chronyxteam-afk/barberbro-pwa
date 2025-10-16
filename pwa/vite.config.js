@@ -8,31 +8,8 @@ export default defineConfig(({ mode }) => ({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
-      manifest: {
-        name: process.env.VITE_APP_NAME || 'BarberBro Booking',
-        short_name: process.env.VITE_APP_SHORT_NAME || 'BarberBro',
-        description: process.env.VITE_APP_DESCRIPTION || 'Prenota il tuo taglio in pochi tap',
-        theme_color: '#C19A6B',
-        background_color: '#1F1F1F',
-        display: 'standalone',
-        orientation: 'portrait',
-        scope: '/barberbro-pwa/',
-        start_url: '/barberbro-pwa/',
-        icons: [
-          {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          }
-        ]
-      },
+      includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png', 'manifest.json'],
+      manifest: false, // Usiamo manifest.json dinamico in public/
       workbox: {
         runtimeCaching: [
           {

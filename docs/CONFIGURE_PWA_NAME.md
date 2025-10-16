@@ -1,36 +1,27 @@
 # 🏷️ Configurare il Nome della PWA
 
-Il nome della PWA (quello che appare quando l'utente installa l'app sul telefono) può essere personalizzato tramite **variabili GitHub**.
+Il nome della PWA (quello che appare quando l'utente installa l'app sul telefono) viene configurato **automaticamente** dal foglio **ConfigPWA** in Google Sheets!
 
-## 📋 Come Configurare
+## 📋 Come Funziona
 
-### Opzione 1: Usare valori di default (attuale)
+Il manifest della PWA viene generato **dinamicamente** al caricamento dell'app usando i valori dal foglio **ConfigPWA**:
 
-Se non configuri nulla, la PWA userà:
-- **Nome**: `BarberBro Booking`
-- **Nome breve**: `BarberBro`
-- **Descrizione**: `Prenota il tuo taglio in pochi tap`
+| Campo ConfigPWA | Dove viene usato |
+|-----------------|------------------|
+| `shop_name` | Nome completo della PWA (es. "Barber Shop Mario") |
+| `shop_name` (primi 12 caratteri) | Nome breve sotto l'icona |
+| `shop_tagline` | Descrizione della PWA |
+| `primary_color` | Colore tema della PWA |
 
-### Opzione 2: Personalizzare tramite GitHub Variables
+## ✅ Configurazione Automatica
 
-1. Vai su **GitHub** → Repository **barberbro-pwa**
-2. Clicca su **Settings** → **Secrets and variables** → **Actions**
-3. Nella tab **Variables**, clicca **New repository variable**
-4. Aggiungi le seguenti variabili:
-
-| Nome Variabile | Esempio Valore | Descrizione |
-|----------------|----------------|-------------|
-| `APP_NAME` | `Barber Shop Mario - Prenota` | Nome completo della PWA (max 45 caratteri) |
-| `APP_SHORT_NAME` | `Mario Barber` | Nome breve (max 12 caratteri, appare sull'icona) |
-| `APP_DESCRIPTION` | `Prenota il tuo appuntamento da Mario` | Descrizione PWA |
-
-5. Dopo aver salvato, fai un **nuovo commit** (anche vuoto) per triggerare il rebuild:
-   ```bash
-   git commit --allow-empty -m "chore: rebuild PWA with new name"
-   git push origin main
-   ```
-
-6. La PWA verrà ricostruita con i nuovi nomi!
+1. Apri il foglio **ConfigPWA** su Google Sheets
+2. Modifica i campi:
+   - `shop_name`: Nome del negozio
+   - `shop_tagline`: Slogan/descrizione
+   - `primary_color`: Colore principale (es. `#C19A6B`)
+3. **Non serve fare nulla altro!**
+4. Al prossimo accesso alla PWA, il manifest sarà aggiornato automaticamente
 
 ## 🎯 Quando Viene Usato
 

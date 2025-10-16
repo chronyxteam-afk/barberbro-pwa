@@ -176,6 +176,10 @@ export const useStore = create(
           const result = await apiService.getConfig()
           if (result.success) {
             set({ config: result.config, loading: false })
+            
+            // Aggiorna manifest PWA dinamicamente
+            const { updateManifest } = await import('../utils/updateManifest')
+            updateManifest(result.config)
           } else {
             throw new Error(result.error)
           }
