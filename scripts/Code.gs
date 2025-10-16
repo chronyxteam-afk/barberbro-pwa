@@ -154,7 +154,8 @@ function loadAssenzeCache() {
         or_ID: row[1],
         az_startDateTime: parseDateTime(row[2]),
         az_endDateTime: parseDateTime(row[3]),
-        az_reason: row[4]
+        az_type: row[4] || 'Permesso', // Ferie, Permesso, Malattia, Turno Speciale
+        az_status: row[5] || 'Confermato' // Confermato, Annullato
       });
     }
   }
@@ -952,6 +953,10 @@ function isSlotCopertoDaAssenza(operatoreId, slotStart, slotEnd, inclusiveEnd = 
   for (let i = 0; i < assenze.length; i++) {
     const a = assenze[i];
     if (a.or_ID !== operatoreId) continue;
+    
+    // IGNORA turni speciali e assenze annullate
+    if (a.az_type === 'Turno Speciale' || a.az_status === 'Annullato') continue;
+    
     const assenzaStart = a.az_startDateTime;
     const assenzaEnd = a.az_endDateTime;
     
@@ -1064,15 +1069,27 @@ function generaSlotCompleti() {
   let slotGenerati = 0;
   let giorniProcessati = 0;
   
-  // PRIMA: Genera slot di ASSENZA (1 slot unico per periodo)
-  Logger.log('\n>> STEP A: Generazione slot assenze (1 per periodo)...');
+  // PRIMA: Processa ASSENZE e TURNI SPECIALI
+  Logger.log('\n>> STEP A: Generazione slot assenze e turni speciali...');
   const assenzeCache = loadAssenzeCache();
   let assenzeGenerate = 0;
+  const turniSpeciali = []; // Array per memorizzare i turni speciali da processare dopo
   
   assenzeCache.forEach(assenza => {
-    // Controlla se l'assenza è nel periodo di generazione
+    // Salta se annullato
+    if (assenza.az_status === 'Annullato') return;
+    
+    // Controlla se è nel periodo di generazione
     if (assenza.az_endDateTime >= dataInizio && assenza.az_startDateTime <= dataFine) {
-      // Trova operatore per verificare se è giorno intero
+      
+      // CASO 1: TURNO SPECIALE - memorizza per generare slot liberi dopo
+      if (assenza.az_type === 'Turno Speciale' && assenza.az_status === 'Confermato') {
+        turniSpeciali.push(assenza);
+        Logger.log(`   ✅ Turno speciale trovato: ${assenza.or_ID} dal ${formatDateTime(assenza.az_startDateTime)} al ${formatDateTime(assenza.az_endDateTime)}`);
+        return;
+      }
+      
+      // CASO 2: ASSENZA NORMALE - genera slot "Non Disponibile"
       const operatore = operatori.find(op => op.or_ID === assenza.or_ID);
       let noteAssenza;
       
@@ -1080,13 +1097,13 @@ function generaSlotCompleti() {
       const stessaData = assenza.az_startDateTime.toDateString() === assenza.az_endDateTime.toDateString();
       
       if (stessaData && operatore && isAssenzaGiornoIntero(assenza, operatore.or_workStart, operatore.or_workEnd)) {
-        // Assenza a giornata intera singola: "Motivo - Il gg/mm/aaaa"
-        noteAssenza = `${assenza.az_reason || 'Non disponibile'} - Il ${formatDateOnly(assenza.az_startDateTime)}`;
+        // Assenza a giornata intera singola: "Tipo - Il gg/mm/aaaa"
+        noteAssenza = `${assenza.az_type || 'Non disponibile'} - Il ${formatDateOnly(assenza.az_startDateTime)}`;
       } else if (!stessaData) {
-        // Assenza su più giorni: "Motivo - Dal gg/mm/aaaa al gg/mm/aaaa"
-        noteAssenza = `${assenza.az_reason || 'Non disponibile'} - Dal ${formatDateOnly(assenza.az_startDateTime)} al ${formatDateOnly(assenza.az_endDateTime)}`;
+        // Assenza su più giorni: "Tipo - Dal gg/mm/aaaa al gg/mm/aaaa"
+        noteAssenza = `${assenza.az_type || 'Non disponibile'} - Dal ${formatDateOnly(assenza.az_startDateTime)} al ${formatDateOnly(assenza.az_endDateTime)}`;
       } else {
-        // Assenza parziale: "Motivo - Dal gg/mm/aaaa HH:MM al gg/mm/aaaa HH:MM" (inline format)
+        // Assenza parziale: "Tipo - Dal gg/mm/aaaa HH:MM al gg/mm/aaaa HH:MM" (inline format)
         const formatShort = (d) => {
           const day = String(d.getDate()).padStart(2, '0');
           const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -1095,7 +1112,7 @@ function generaSlotCompleti() {
           const minutes = String(d.getMinutes()).padStart(2, '0');
           return `${day}/${month}/${year} ${hours}:${minutes}`;
         };
-        noteAssenza = `${assenza.az_reason || 'Non disponibile'} - Dal ${formatShort(assenza.az_startDateTime)} al ${formatShort(assenza.az_endDateTime)}`;
+        noteAssenza = `${assenza.az_type || 'Non disponibile'} - Dal ${formatShort(assenza.az_startDateTime)} al ${formatShort(assenza.az_endDateTime)}`;
       }
       
       nuoviSlot.push([
@@ -1223,6 +1240,82 @@ function generaSlotCompleti() {
     }
   });
   
+  // STEP TURNI SPECIALI: Genera slot liberi per i turni speciali
+  Logger.log('\n>> STEP TURNI SPECIALI: Generazione slot liberi per turni straordinari...');
+  let slotTurniSpeciali = 0;
+  
+  turniSpeciali.forEach(turno => {
+    const operatore = operatori.find(op => op.or_ID === turno.or_ID);
+    if (!operatore) {
+      Logger.log(`   ⚠️ Operatore ${turno.or_ID} non trovato per turno speciale`);
+      return;
+    }
+    
+    // Estrai orari dal turno speciale
+    const turnoStart = turno.az_startDateTime;
+    const turnoEnd = turno.az_endDateTime;
+    
+    // Genera slot per ogni giorno del turno
+    let currentDate = new Date(turnoStart);
+    currentDate.setHours(0, 0, 0, 0);
+    const turnoEndDate = new Date(turnoEnd);
+    turnoEndDate.setHours(0, 0, 0, 0);
+    
+    while (currentDate <= turnoEndDate) {
+      const minutiInizio = currentDate.toDateString() === turnoStart.toDateString() 
+        ? turnoStart.getHours() * 60 + turnoStart.getMinutes()
+        : 0;
+      
+      const minutiFine = currentDate.toDateString() === turnoEnd.toDateString()
+        ? turnoEnd.getHours() * 60 + turnoEnd.getMinutes()
+        : 24 * 60;
+      
+      let minutiCurrent = minutiInizio;
+      let slotGiornoTurno = 0;
+      
+      while (minutiCurrent < minutiFine) {
+        const slotStart = new Date(currentDate);
+        slotStart.setHours(0, minutiCurrent, 0, 0);
+        
+        // Verifica sovrapposizione con prenotazioni
+        const prenList = intervalliPrenotatiPerOperatore[String(operatore.or_ID)] || [];
+        const slotStartMs = slotStart.getTime();
+        const slotEndMs = slotStartMs + durataSlot * 60000;
+        let overlapPren = false;
+        for (let p = 0; p < prenList.length; p++) {
+          const [pStart, pEnd] = prenList[p];
+          const noOverlap = (slotEndMs <= pStart) || (slotStartMs >= pEnd);
+          if (!noOverlap) { 
+            overlapPren = true; 
+            break; 
+          }
+        }
+        if (overlapPren) {
+          minutiCurrent += durataSlot;
+          continue;
+        }
+        
+        // Genera slot libero per turno speciale
+        nuoviSlot.push([
+          generateId(), // at_ID
+          formatDateTime(slotStart), // at_startDateTime
+          '', // cn_ID (vuoto)
+          '', // sv_ID (vuoto)
+          operatore.or_ID, // or_ID
+          'Libero', // at_status
+          'Turno Speciale' // at_notes
+        ]);
+        slotGiornoTurno++;
+        slotTurniSpeciali++;
+        
+        minutiCurrent += durataSlot;
+      }
+      
+      Logger.log(`   ${currentDate.toLocaleDateString()} (Turno Speciale ${operatore.or_name}): ${slotGiornoTurno} slot generati`);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+  });
+  
   // Scrivi slot in AppunTamenti
   if (nuoviSlot.length > 0) {
     const ultimaRiga = sheetAppuntamenti.getLastRow();
@@ -1262,9 +1355,9 @@ function generaSlotCompleti() {
   const endTime = new Date();
   const tempoEsecuzione = ((endTime - startTime) / 1000).toFixed(2);
   
-  Logger.log(`✅ Completato in ${tempoEsecuzione}s: ${nuoviSlot.length} slot, ${archiviati} archiviati, ${rimossiScaduti} liberi scaduti rimossi`);
+  Logger.log(`✅ Completato in ${tempoEsecuzione}s: ${nuoviSlot.length} slot totali (${slotGenerati} normali + ${slotTurniSpeciali} turni speciali), ${archiviati} archiviati, ${rimossiScaduti} liberi scaduti rimossi`);
   
-  SpreadsheetApp.getUi().alert(`✅ Generazione completata in ${tempoEsecuzione}s!\n\nSlot cancellati: ${slotCancellati}\nSlot generati: ${nuoviSlot.length}\nAppuntamenti archiviati: ${archiviati}\nSlot liberi scaduti rimossi: ${rimossiScaduti}`);
+  SpreadsheetApp.getUi().alert(`✅ Generazione completata in ${tempoEsecuzione}s!\n\nSlot cancellati: ${slotCancellati}\nSlot generati: ${nuoviSlot.length}\n  - Slot normali: ${slotGenerati}\n  - Turni speciali: ${slotTurniSpeciali}\nAppuntamenti archiviati: ${archiviati}\nSlot liberi scaduti rimossi: ${rimossiScaduti}`);
   
   return nuoviSlot.length;
 }
