@@ -1180,7 +1180,8 @@ function generaSlotCompleti() {
         let overlapPren = false;
         for (let p = 0; p < prenList.length; p++) {
           const [pStart, pEnd] = prenList[p];
-          const noOverlap = (slotEndMs <= pStart) || (slotStartMs > pEnd);
+          // LOGICA BOUNDARY: se prenotazione finisce alle 11:00, lo slot 11:00-11:15 è LIBERO
+          const noOverlap = (slotEndMs <= pStart) || (slotStartMs >= pEnd);
           if (!noOverlap) { overlapPren = true; break; }
         }
         if (overlapPren) {
