@@ -81,22 +81,28 @@ export default function SlotCalendar() {
             
             {/* Grid orari */}
             <div className="grid grid-cols-3 gap-2">
-              {dateSlots.map((slot) => (
-                <button
-                  key={slot.at_ID}
-                  onClick={() => handleSelect(slot)}
-                  className="card-hover p-4 text-center min-h-[60px] flex flex-col items-center justify-center"
-                >
-                  <div className="font-semibold text-[17px] text-[#007AFF]">
-                    {formatTime(slot.at_startDateTime)}
-                  </div>
-                  {slot.op_ID && getOperatorName(slot.op_ID) && (
-                    <div className="text-[11px] text-[#86868b] mt-1 truncate w-full">
-                      {getOperatorName(slot.op_ID)}
+              {dateSlots.map((slot) => {
+                const isTurnoSpeciale = slot.at_notes === 'Turno Speciale'
+                return (
+                  <button
+                    key={slot.at_ID}
+                    onClick={() => handleSelect(slot)}
+                    className={`card-hover p-4 text-center min-h-[60px] flex flex-col items-center justify-center relative ${isTurnoSpeciale ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200' : ''}`}
+                  >
+                    {isTurnoSpeciale && (
+                      <div className="absolute top-1 right-1 text-[10px]">⭐</div>
+                    )}
+                    <div className={`font-semibold text-[17px] ${isTurnoSpeciale ? 'text-amber-600' : 'text-[#007AFF]'}`}>
+                      {formatTime(slot.at_startDateTime)}
                     </div>
-                  )}
-                </button>
-              ))}
+                    {slot.op_ID && getOperatorName(slot.op_ID) && (
+                      <div className={`text-[11px] mt-1 truncate w-full ${isTurnoSpeciale ? 'text-amber-600' : 'text-[#86868b]'}`}>
+                        {getOperatorName(slot.op_ID)}
+                      </div>
+                    )}
+                  </button>
+                )
+              })}
             </div>
           </div>
         ))}

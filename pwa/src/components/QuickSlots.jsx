@@ -82,28 +82,36 @@ export default function QuickSlots() {
               
               {/* Slot del giorno */}
               <div className="space-y-2">
-                {dateSlots.map((slot, index) => (
-                  <button
-                    key={slot.at_ID}
-                    onClick={() => handleSelect(slot)}
-                    className="card-hover w-full text-left p-4"
-                    style={{ animationDelay: `${index * 30}ms` }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="text-[20px] font-semibold text-[#007AFF] min-w-[60px]">
-                          {formatTime(slot.at_startDateTime)}
-                        </div>
-                        <div>
-                          <div className="text-[15px] text-[#1d1d1f]">
-                            con <span className="font-medium">{slot.op_name}</span>
+                {dateSlots.map((slot, index) => {
+                  const isTurnoSpeciale = slot.at_notes === 'Turno Speciale'
+                  return (
+                    <button
+                      key={slot.at_ID}
+                      onClick={() => handleSelect(slot)}
+                      className={`card-hover w-full text-left p-4 ${isTurnoSpeciale ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200' : ''}`}
+                      style={{ animationDelay: `${index * 30}ms` }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className={`text-[20px] font-semibold min-w-[60px] ${isTurnoSpeciale ? 'text-amber-600' : 'text-[#007AFF]'}`}>
+                            {formatTime(slot.at_startDateTime)}
+                          </div>
+                          <div>
+                            <div className="text-[15px] text-[#1d1d1f]">
+                              con <span className="font-medium">{slot.op_name}</span>
+                            </div>
+                            {isTurnoSpeciale && (
+                              <div className="text-[12px] text-amber-600 font-medium mt-0.5 flex items-center gap-1">
+                                ⭐ Turno Speciale
+                              </div>
+                            )}
                           </div>
                         </div>
+                        <div className={`text-xl ml-4 ${isTurnoSpeciale ? 'text-amber-600' : 'text-[#007AFF]'}`}>→</div>
                       </div>
-                      <div className="text-[#007AFF] text-xl ml-4">→</div>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           ))
