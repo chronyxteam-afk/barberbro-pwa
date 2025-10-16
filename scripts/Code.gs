@@ -1182,7 +1182,11 @@ function generaSlotCompleti() {
           const [pStart, pEnd] = prenList[p];
           // LOGICA BOUNDARY: se prenotazione finisce alle 11:00, lo slot 11:00-11:15 è LIBERO
           const noOverlap = (slotEndMs <= pStart) || (slotStartMs >= pEnd);
-          if (!noOverlap) { overlapPren = true; break; }
+          if (!noOverlap) { 
+            overlapPren = true; 
+            Logger.log(`   ⚠️ Slot ${formatDateTime(slotStart)} saltato: overlap con prenotazione`);
+            break; 
+          }
         }
         if (overlapPren) {
           minutiCurrent += durataSlot;
@@ -1190,7 +1194,12 @@ function generaSlotCompleti() {
         }
 
         // SALTA questo slot se coperto da assenza/sovrapposizione (confine finale non prenotabile)
-        if (!isSlotCopertoDaAssenza(operatore.or_ID, slotStart, new Date(slotStart.getTime() + durataSlot * 60000), true)) {
+        const copertoDaAssenza = isSlotCopertoDaAssenza(operatore.or_ID, slotStart, new Date(slotStart.getTime() + durataSlot * 60000), true);
+        if (copertoDaAssenza) {
+          Logger.log(`   ⚠️ Slot ${formatDateTime(slotStart)} saltato: coperto da assenza`);
+        }
+        
+        if (!copertoDaAssenza) {
           nuoviSlot.push([
             generateId(), // at_ID
             formatDateTime(slotStart), // at_startDateTime
@@ -1522,7 +1531,9 @@ function pulisciSlotLiberiScaduti(minNoticeMinutes = 0) {
   let rimossi = 0;
   
   const now = new Date();
-  // Cancella solo slot nel passato: AppSheet deve poter usare la finestra di preavviso
+  // IMPORTANTE: il parametro minNoticeMinutes viene IGNORATO volutamente
+  // Cancelliamo SOLO slot nel passato (< now), NON quelli nella finestra di preavviso
+  // AppSheet deve poter usare gli slot nella finestra di preavviso!
   const cutoff = now;
   
   for (let i = 1; i < data.length; i++) {
