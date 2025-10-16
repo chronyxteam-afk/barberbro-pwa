@@ -39,10 +39,10 @@ export default defineConfig({
             urlPattern: /^https:\/\/script\.google\.com\/.*/i,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'api-cache',
+              cacheName: 'api-cache-v2', // Incrementa per invalidare cache
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 // 1 hour
+                maxAgeSeconds: 5 * 60 // 5 minuti per aggiornamenti più rapidi
               },
               cacheableResponse: {
                 statuses: [0, 200]
