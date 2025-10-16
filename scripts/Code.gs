@@ -1077,10 +1077,16 @@ function generaSlotCompleti() {
   
   assenzeCache.forEach(assenza => {
     // Salta se annullato
-    if (assenza.az_status === 'Annullato') return;
+    if (assenza.az_status === 'Annullato') {
+      Logger.log(`   ⏭️ Assenza annullata saltata: ${assenza.az_type} - ${assenza.or_ID}`);
+      return;
+    }
     
     // Controlla se è nel periodo di generazione
     if (assenza.az_endDateTime >= dataInizio && assenza.az_startDateTime <= dataFine) {
+      
+      // DEBUG: Log tipo e status
+      Logger.log(`   🔍 Processando: az_type="${assenza.az_type}" az_status="${assenza.az_status}"`);
       
       // CASO 1: TURNO SPECIALE - memorizza per generare slot liberi dopo
       if (assenza.az_type === 'Turno Speciale' && assenza.az_status === 'Confermato') {
