@@ -954,9 +954,11 @@ function isSlotCopertoDaAssenza(operatoreId, slotStart, slotEnd, inclusiveEnd = 
     if (a.or_ID !== operatoreId) continue;
     const assenzaStart = a.az_startDateTime;
     const assenzaEnd = a.az_endDateTime;
-    const noOverlapExclusiveEnd = (slotEnd <= assenzaStart) || (slotStart >= assenzaEnd);
-    const noOverlapInclusiveEnd = (slotEnd <= assenzaStart) || (slotStart > assenzaEnd);
-    const noOverlap = inclusiveEnd ? noOverlapInclusiveEnd : noOverlapExclusiveEnd;
+    
+    // LOGICA BOUNDARY:
+    // Se assenza è 09:00-10:00, lo slot 10:00-10:30 è LIBERO (rientro alle 10:00)
+    // Quindi: slotStart >= assenzaEnd significa NO overlap
+    const noOverlap = (slotEnd <= assenzaStart) || (slotStart >= assenzaEnd);
     if (!noOverlap) return true;
   }
   return false;
