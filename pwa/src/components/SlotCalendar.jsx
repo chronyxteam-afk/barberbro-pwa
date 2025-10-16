@@ -58,9 +58,10 @@ export default function SlotCalendar() {
         <div className="max-w-2xl mx-auto px-6 py-4 flex items-center gap-4">
           <button 
             onClick={() => prevStep()} 
-            className="text-[#007AFF] text-[17px] font-medium hover:opacity-60 transition-opacity"
+            className="text-[#007AFF] text-[28px] font-bold hover:opacity-60 transition-opacity w-10 flex items-center justify-center"
+            aria-label="Indietro"
           >
-            ← Indietro
+            ←
           </button>
           <h2 className="text-[17px] font-semibold text-[#1d1d1f] flex-1 text-center whitespace-nowrap">
             Scegli data e ora
