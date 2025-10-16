@@ -17,11 +17,21 @@ export default function OperatorList() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b sticky top-0 z-10">
-        <div className="max-w-md mx-auto px-6 py-4 flex items-center gap-4">
-          <button onClick={() => prevStep()} className="text-2xl">←</button>
-          <h2 className="text-xl font-bold flex-1">Scegli il barbiere</h2>
+    <div className="min-h-screen bg-[#f5f5f7]">
+      {/* Header - Apple Style */}
+      <div className="bg-white/80 backdrop-blur-apple border-b border-[#d2d2d7] sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto px-6 py-4 flex items-center gap-4">
+          <button 
+            onClick={() => prevStep()} 
+            className="text-[#007AFF] text-[28px] font-bold hover:opacity-60 transition-opacity w-10 flex items-center justify-center"
+            aria-label="Indietro"
+          >
+            ←
+          </button>
+          <h2 className="text-[17px] font-semibold text-[#1d1d1f] flex-1 text-center whitespace-nowrap">
+            Scegli l'operatore
+          </h2>
+          <div className="w-20"></div> {/* Spacer */}
         </div>
       </div>
 

@@ -87,20 +87,21 @@ export default function MyBookings() {
   const pastBookings = myBookings.filter(b => !isUpcoming(b.at_startDateTime || b.dateTime))
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <div className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-md mx-auto px-6 py-4 flex items-center gap-4">
+    <div className="min-h-screen bg-[#f5f5f7] pb-20">
+      {/* Header - Apple Style */}
+      <div className="bg-white/80 backdrop-blur-apple border-b border-[#d2d2d7] sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto px-6 py-4 flex items-center gap-4">
           <button
             onClick={() => setStep('welcome')}
-            className="text-2xl hover:scale-110 transition-transform"
+            className="text-[#007AFF] text-[28px] font-bold hover:opacity-60 transition-opacity w-10 flex items-center justify-center"
+            aria-label="Indietro"
           >
             ←
           </button>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold text-gray-900">Le mie prenotazioni</h1>
-            <p className="text-sm text-gray-600">{customer?.name || 'Cliente'}</p>
-          </div>
+          <h2 className="text-[17px] font-semibold text-[#1d1d1f] flex-1 text-center whitespace-nowrap">
+            Le mie prenotazioni
+          </h2>
+          <div className="w-20"></div> {/* Spacer */}
         </div>
       </div>
 
