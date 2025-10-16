@@ -55,7 +55,7 @@ export default function QuickSlots() {
           >
             ← Indietro
           </button>
-          <h2 className="text-[17px] font-semibold text-[#1d1d1f] flex-1 text-center">
+          <h2 className="text-[17px] font-semibold text-[#1d1d1f] flex-1 text-center whitespace-nowrap">
             Primi slot disponibili
           </h2>
           <div className="w-20"></div> {/* Spacer */}

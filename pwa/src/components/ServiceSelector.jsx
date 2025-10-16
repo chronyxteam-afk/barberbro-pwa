@@ -41,7 +41,7 @@ export default function ServiceSelector() {
           >
             ← Indietro
           </button>
-          <h2 className="text-[17px] font-semibold text-[#1d1d1f] flex-1 text-center">
+          <h2 className="text-[17px] font-semibold text-[#1d1d1f] flex-1 text-center whitespace-nowrap">
             Scegli il servizio
           </h2>
           <div className="w-20"></div> {/* Spacer for centering */}
