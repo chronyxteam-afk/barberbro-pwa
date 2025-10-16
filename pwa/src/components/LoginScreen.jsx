@@ -50,16 +50,16 @@ export default function LoginScreen() {
             <img 
               src={config.shop_logo_url} 
               alt={config.shop_name}
-              className="w-24 h-24 mx-auto rounded-[24px] shadow-lg mb-4"
+              className="w-32 h-32 mx-auto rounded-full shadow-2xl mb-6 object-cover border-4 border-white"
             />
           ) : (
             <div 
-              className="w-24 h-24 mx-auto rounded-[24px] flex items-center justify-center mb-4 shadow-lg"
+              className="w-32 h-32 mx-auto rounded-full flex items-center justify-center mb-6 shadow-2xl border-4 border-white"
               style={{
                 background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))`
               }}
             >
-              <span className="text-white text-4xl">💈</span>
+              <span className="text-white text-5xl">💈</span>
             </div>
           )}
           

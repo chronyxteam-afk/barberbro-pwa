@@ -39,11 +39,11 @@ export default function WelcomeScreen() {
             <img 
               src={config.shop_logo_url} 
               alt={config.shop_name}
-              className="w-20 h-20 mx-auto rounded-[24px] shadow-lg object-cover"
+              className="w-28 h-28 mx-auto rounded-full shadow-2xl object-cover border-4 border-white"
             />
           ) : (
             <div 
-              className="w-20 h-20 mx-auto rounded-[24px] shadow-lg flex items-center justify-center text-4xl"
+              className="w-28 h-28 mx-auto rounded-full shadow-2xl border-4 border-white flex items-center justify-center text-5xl"
               style={{
                 background: `linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))`
               }}
