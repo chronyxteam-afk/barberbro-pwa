@@ -1245,9 +1245,14 @@ function generaSlotCompleti() {
   // STEP 5: Pulizia slot liberi scaduti (usa min_notice_hours da ConfigPWA)
   let rimossiScaduti = 0;
   try {
+    // IMPORTANTE: Aspetta che Google Sheets finisca di scrivere i dati
+    SpreadsheetApp.flush();
+    
     const cfgPwa = loadConfigPWACache();
     const minNoticeHours = parseInt(cfgPwa.min_notice_hours) || 0;
     const minNoticeMinutes = minNoticeHours * 60;
+    
+    Logger.log(`\n>> STEP 5: Pulizia slot scaduti (ora: ${new Date()}, preavviso: ${minNoticeHours}h)...`);
     rimossiScaduti = pulisciSlotLiberiScaduti(minNoticeMinutes);
   } catch (e) {
     Logger.log('⚠️ Errore pulizia slot scaduti: ' + e.message);
@@ -1551,12 +1556,14 @@ function pulisciSlotLiberiScaduti(minNoticeMinutes = 0) {
       atStart = atStartStr instanceof Date ? atStartStr : parseDateTime(atStartStr);
     } catch (e) {
       // in caso di parsing errato, non rischiare di cancellare: mantieni
+      Logger.log(`⚠️ Errore parsing data per slot: ${atStartStr} - ${e.message}`);
       righeDaMantenere.push(row);
       continue;
     }
     
     // Elimina SOLO slot LIBERI antecedenti al cutoff (passato o entro preavviso)
     if (status === 'Libero' && atStart < cutoff) {
+      Logger.log(`🗑️ Rimosso slot LIBERO scaduto: ${atStartStr} (parsed: ${atStart}) < cutoff: ${cutoff}`);
       rimossi++;
     } else {
       righeDaMantenere.push(row);
